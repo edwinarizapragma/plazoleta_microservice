@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { HttpExceptionFilter } from '../util/http-exception.fillter';
+import { HttpExceptionFilter } from '../util/errors/http-exception.fillter';
 import * as dotenv from 'dotenv';
 dotenv.config();
 async function bootstrap() {
@@ -14,7 +14,7 @@ async function bootstrap() {
     .setTitle('API de plazoleta')
     .setDescription('Documentación para api de plazoleta')
     .setVersion('1.0')
-    // .addTag('usuarios')
+    .addTag('restaurantes')
     // .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);
@@ -22,6 +22,6 @@ async function bootstrap() {
 
   const port = process.env.APP_PORT || 3000;
   console.log(`listening on ${port}`);
-  await app.listen(3000);
+  await app.listen(port);
 }
 bootstrap();
