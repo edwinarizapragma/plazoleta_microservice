@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestaurantesModule } from './restaurantes/domain/modules/restaurantes.module';
+import { PlatosModule } from './platos/domain/modules/platos.module';
 import { RestauranteEntity } from '../database/typeorm/entities/Restaurante.entity';
 import { CategoriaEntity } from '../database/typeorm/entities/Categoria.entity';
 import { PedidoEntity } from '../database/typeorm/entities/Pedido.entity';
@@ -27,6 +28,7 @@ dotenv.config();
       synchronize: false,
     }),
     RestaurantesModule,
+    PlatosModule,
   ],
   controllers: [],
   providers: [],

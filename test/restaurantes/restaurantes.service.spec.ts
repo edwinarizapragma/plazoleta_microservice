@@ -46,18 +46,19 @@ describe('RestaurantesService', () => {
   });
 
   it('test create a restaurant with correct input', async () => {
+    const randomNit = Math.floor(Math.random() * Math.pow(10, 10)); // random number of ten digits
     const fieldsToCreate = new createRestauranteDto();
     fieldsToCreate.nombre = 'Los Pollos Hermanos';
     fieldsToCreate.direccion = 'Carrera 1 # 100-10';
     fieldsToCreate.id_propietario = 31;
     fieldsToCreate.telefono = '+573156487925';
     fieldsToCreate.url_logo = '/storage/foto.jpg';
-    fieldsToCreate.nit = Math.floor(Math.random() * Math.pow(10, 10)); // random number of ten digits
+    fieldsToCreate.nit = randomNit;
     const result = await service.create(fieldsToCreate);
     expect(result).toEqual({
       nombre: 'Los Pollos Hermanos',
       direccion: 'Carrera 1 # 100-10',
-      nit: 9545462145,
+      nit: randomNit,
     });
   });
 

@@ -15,6 +15,7 @@ async function bootstrap() {
     .setDescription('Documentación para api de plazoleta')
     .setVersion('1.0')
     .addTag('restaurantes')
+    .addTag('platos')
     // .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);
