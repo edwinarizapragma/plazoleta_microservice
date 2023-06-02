@@ -1,23 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RestaurantesService } from '../../src/restaurantes/application/restaurantes.service';
 import { createRestauranteDto } from '../../src/restaurantes/dto/restaurante.dto';
-import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpStatus } from '@nestjs/common';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { AppModule } from '../../src/app.module';
+import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
 describe('RestaurantesService', () => {
   let service: RestaurantesService;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule, TypeOrmModule.forFeature([RestauranteEntity])],
-      providers: [
-        RestaurantesService,
-        {
-          provide: getRepositoryToken(RestauranteEntity),
-          useClass: Repository,
-        },
-      ],
+      providers: [RestaurantesService, RestauranteRepository],
     }).compile();
 
     service = module.get<RestaurantesService>(RestaurantesService);
@@ -50,7 +44,7 @@ describe('RestaurantesService', () => {
     const fieldsToCreate = new createRestauranteDto();
     fieldsToCreate.nombre = 'Los Pollos Hermanos';
     fieldsToCreate.direccion = 'Carrera 1 # 100-10';
-    fieldsToCreate.id_propietario = 31;
+    fieldsToCreate.id_propietario = 71;
     fieldsToCreate.telefono = '+573156487925';
     fieldsToCreate.url_logo = '/storage/foto.jpg';
     fieldsToCreate.nit = randomNit;

@@ -5,11 +5,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestauranteEntity } from '../../../../database/typeorm/entities/Restaurante.entity';
 import { PlatoEntity } from '../../../../database/typeorm/entities/Plato.entity';
 import { CategoriaEntity } from '../../../../database/typeorm/entities/Categoria.entity';
+import { PlatoRepository } from '../repositories/PlatoRepository';
+import { CategoriaRepository } from '../repositories/CategoriaRepository';
+import { RestauranteRepository } from '../../../restaurantes/domain/repositories/RestauranteRepository';
 @Module({
   imports: [
     TypeOrmModule.forFeature([RestauranteEntity, PlatoEntity, CategoriaEntity]),
   ],
   controllers: [PlatosController],
-  providers: [PlatosService],
+  providers: [
+    PlatosService,
+    PlatoRepository,
+    RestauranteRepository,
+    CategoriaRepository,
+  ],
 })
 export class PlatosModule {}

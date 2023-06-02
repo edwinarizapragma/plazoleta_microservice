@@ -1,14 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PlatosService } from '../../src/platos/application/platos.service';
 import { AppModule } from '../../src/app.module';
-import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
 import { CategoriaEntity } from '../../database/typeorm/entities/Categoria.entity';
-import { Repository } from 'typeorm';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { cretePlatoDto } from '../../src/platos/dto/createPlato.dto';
+import { createPlatoDto } from '../../src/platos/dto/createPlato.dto';
 import { updatePlatoDto } from '../../src/platos/dto/updatePlato.dto';
+import { PlatoRepository } from '../../src/platos/domain/repositories/PlatoRepository';
+import { CategoriaRepository } from '../../src/platos/domain/repositories/CategoriaRepository';
+import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
 
 describe('PlatosService', () => {
   let service: PlatosService;
@@ -25,18 +27,9 @@ describe('PlatosService', () => {
       ],
       providers: [
         PlatosService,
-        {
-          provide: getRepositoryToken(RestauranteEntity),
-          useClass: Repository,
-        },
-        {
-          provide: getRepositoryToken(PlatoEntity),
-          useClass: Repository,
-        },
-        {
-          provide: getRepositoryToken(CategoriaEntity),
-          useClass: Repository,
-        },
+        PlatoRepository,
+        RestauranteRepository,
+        CategoriaRepository,
       ],
     }).compile();
 
@@ -64,7 +57,7 @@ describe('PlatosService', () => {
 
   describe('CreatePlatoFunction', () => {
     it('test create plato with valid input', async () => {
-      const fieldsToCreate = new cretePlatoDto();
+      const fieldsToCreate = new createPlatoDto();
       fieldsToCreate.nombre = 'Arroz chino';
       fieldsToCreate.id_categoria = 1;
       fieldsToCreate.descripcion =
@@ -82,7 +75,7 @@ describe('PlatosService', () => {
     });
 
     it('test create plato with multiple validation error', async () => {
-      const fieldsToCreate = new cretePlatoDto();
+      const fieldsToCreate = new createPlatoDto();
       fieldsToCreate.nombre = '';
       fieldsToCreate.id_categoria = -1;
       fieldsToCreate.descripcion = '';
@@ -100,7 +93,7 @@ describe('PlatosService', () => {
     });
 
     it('test restaurant or category doesnt exists', async () => {
-      const fieldsToCreate = new cretePlatoDto();
+      const fieldsToCreate = new createPlatoDto();
       fieldsToCreate.nombre = 'Pollo a la broaster';
       fieldsToCreate.id_categoria = 999;
       fieldsToCreate.descripcion = 'Pollo frito apanado';

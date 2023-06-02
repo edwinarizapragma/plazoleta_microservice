@@ -1,15 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { RestauranteEntity } from '../../../database/typeorm/entities/Restaurante.entity';
 import { createRestauranteDto } from '../dto/restaurante.dto';
 import { validate } from 'class-validator';
+import { RestauranteRepository } from '../domain/repositories/RestauranteRepository';
 @Injectable()
 export class RestaurantesService {
-  constructor(
-    @InjectRepository(RestauranteEntity)
-    private restauranteRepository: Repository<RestauranteEntity>,
-  ) {}
+  constructor(private restauranteRepository: RestauranteRepository) {}
 
   async create(fieldsToCreate: createRestauranteDto) {
     try {
@@ -23,11 +18,8 @@ export class RestaurantesService {
             .flat(),
         };
       }
-      const newRestaurant = new RestauranteEntity();
-      Object.assign(newRestaurant, fieldsToCreate);
-      const { nombre, direccion, nit } = await this.restauranteRepository.save(
-        newRestaurant,
-      );
+      const { nombre, direccion, nit } =
+        await this.restauranteRepository.createNewRestaurant(fieldsToCreate);
       return { nombre, direccion, nit };
     } catch (error) {
       throw new HttpException(

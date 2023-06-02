@@ -1,45 +1,32 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { PlatoEntity } from '../../../database/typeorm/entities/Plato.entity';
-import { Repository } from 'typeorm';
-import { cretePlatoDto } from '../dto/createPlato.dto';
+import { createPlatoDto } from '../dto/createPlato.dto';
 import { validate } from 'class-validator';
-import { CategoriaEntity } from '../../../database/typeorm/entities/Categoria.entity';
-import { RestauranteEntity } from '../../../database/typeorm/entities/Restaurante.entity';
 import { updatePlatoDto } from '../dto/updatePlato.dto';
-
+import { PlatoRepository } from '../domain/repositories/PlatoRepository';
+import { CategoriaRepository } from '../domain/repositories/CategoriaRepository';
+import { RestauranteRepository } from '../../restaurantes/domain/repositories/RestauranteRepository';
 @Injectable()
 export class PlatosService {
   constructor(
-    @InjectRepository(PlatoEntity)
-    private platoRepository: Repository<PlatoEntity>,
-    @InjectRepository(CategoriaEntity)
-    private categoriaRepository: Repository<CategoriaEntity>,
-    @InjectRepository(RestauranteEntity)
-    private restauranteRepository: Repository<RestauranteEntity>,
+    private platoRepository: PlatoRepository,
+    private categoriaRepository: CategoriaRepository,
+    private restauranteRepository: RestauranteRepository,
   ) {}
 
   async categoryNotExists(id_categoria: number): Promise<boolean> {
-    const searchCategoria = await this.categoriaRepository.findOne({
-      select: { id: true },
-      where: {
-        id: id_categoria,
-      },
-    });
-    return [null, undefined].includes(searchCategoria);
+    const searchCategory = await this.categoriaRepository.findOnlyIdCategory(
+      id_categoria,
+    );
+    return [null, undefined].includes(searchCategory);
   }
 
   async restaurantNotExists(id_restaurante: number): Promise<boolean> {
-    const searchRestaurante = await this.restauranteRepository.findOne({
-      select: { id: true },
-      where: {
-        id: id_restaurante,
-      },
-    });
+    const searchRestaurante =
+      await this.restauranteRepository.findOnlyIdRestaurant(id_restaurante);
     return [null, undefined].includes(searchRestaurante);
   }
 
-  async createPlato(fields: cretePlatoDto): Promise<any> {
+  async createPlato(fields: createPlatoDto): Promise<any> {
     try {
       const validationErrors = await validate(fields);
       if (validationErrors.length) {
@@ -63,12 +50,9 @@ export class PlatosService {
           errors: errores,
         };
       }
-      const newPlato = new PlatoEntity();
-      Object.assign(newPlato, fields);
-      newPlato.activo = true;
-      const { nombre, precio, descripcion } = await this.platoRepository.save(
-        newPlato,
-      );
+      fields.activo = true;
+      const { nombre, precio, descripcion } =
+        await this.platoRepository.createNewPlato(fields);
       return { nombre, precio, descripcion };
     } catch (error) {
       throw new HttpException(
@@ -84,7 +68,7 @@ export class PlatosService {
   }
 
   async findPLatoById(id: number): Promise<any> {
-    return await this.platoRepository.findOne({ where: { id } });
+    return await this.platoRepository.findPLatoById(id);
   }
   async platoNotExists(id: number): Promise<boolean> {
     const result = await this.findPLatoById(id);
@@ -104,6 +88,18 @@ export class PlatosService {
       if (await this.platoNotExists(id)) {
         throw { message: 'El id del plato proporcionado no existe' };
       }
+
+      // propiedades diferentes a las aceptadas
+      if (
+        Object.keys(fields).some(
+          (key) => !['descripcion', 'precio'].includes(key),
+        )
+      ) {
+        throw {
+          message:
+            'Solo esta permitido actualizar el precio y la descripción del plato',
+        };
+      }
       const platoToUpdate = await this.findPLatoById(id);
       if (fields.precio) {
         platoToUpdate.precio = fields.precio;
@@ -111,7 +107,7 @@ export class PlatosService {
       if (fields.descripcion) {
         platoToUpdate.descripcion = fields.descripcion;
       }
-      const { precio, descripcion } = await this.platoRepository.save(
+      const { precio, descripcion } = await this.platoRepository.updatePlato(
         platoToUpdate,
       );
       return { precio, descripcion };

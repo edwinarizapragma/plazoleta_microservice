@@ -1,7 +1,7 @@
 import { Controller, Post, Patch, Param, Body } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
 import { PlatosService } from '../../application/platos.service';
-import { cretePlatoDto } from '../../dto/createPlato.dto';
+import { createPlatoDto } from '../../dto/createPlato.dto';
 import { updatePlatoDto } from '../../dto/updatePlato.dto';
 
 @ApiTags('platos')
@@ -14,7 +14,7 @@ export class PlatosController {
   @ApiResponse({ status: 202, description: 'Plato creado' })
   @ApiResponse({ status: 400, description: 'Error de validación de campos' })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
-  async create(@Body() fieldsToCretePlato: cretePlatoDto) {
+  async create(@Body() fieldsToCretePlato: createPlatoDto) {
     return this.platoService.createPlato(fieldsToCretePlato);
   }
   @Patch('/update/:id')

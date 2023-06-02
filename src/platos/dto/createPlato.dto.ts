@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsInt, IsPositive, IsNotEmpty } from 'class-validator';
-export class cretePlatoDto {
+import {
+  IsString,
+  IsInt,
+  IsPositive,
+  IsNotEmpty,
+  IsOptional,
+} from 'class-validator';
+export class createPlatoDto {
   @ApiProperty({
     example: 'Arroz chino',
     description: 'Nombre del plato ',
@@ -87,4 +93,7 @@ export class cretePlatoDto {
     message: 'El url de la imagen es requerido',
   })
   url_imagen: string;
+
+  @IsOptional()
+  activo?: boolean;
 }
