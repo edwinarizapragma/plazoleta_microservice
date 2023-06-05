@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { createPlatoDto } from '../dto/createPlato.dto';
 import { validate } from 'class-validator';
 import { updatePlatoDto } from '../dto/updatePlato.dto';
+import { updateStatusPlatoDto } from '../dto/updateStatusPlato.dto';
 import { PlatoRepository } from '../domain/repositories/PlatoRepository';
 import { CategoriaRepository } from '../domain/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../../restaurantes/domain/repositories/RestauranteRepository';
@@ -106,12 +107,12 @@ export class PlatosService {
             .flat(),
         };
       }
-      const platoInfo = await this.findPLatoById(id);
-      if ([null, undefined].includes(platoInfo)) {
+      const platoToUpdate = await this.findPLatoById(id);
+      if ([null, undefined].includes(platoToUpdate)) {
         throw { message: 'El id del plato proporcionado no existe' };
       }
 
-      if (platoInfo.restaurante.id_propietario !== usuario.id) {
+      if (platoToUpdate.restaurante.id_propietario !== usuario.id) {
         throw {
           message: 'Errores de validación',
           errors: [
@@ -130,7 +131,6 @@ export class PlatosService {
             'Solo esta permitido actualizar el precio y la descripción del plato',
         };
       }
-      const platoToUpdate = await this.findPLatoById(id);
       if (fields.precio) {
         platoToUpdate.precio = fields.precio;
       }
@@ -141,6 +141,64 @@ export class PlatosService {
         platoToUpdate,
       );
       return { precio, descripcion };
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message ? error.message : 'Error al crear el plato',
+          error,
+        },
+        error.message && error.message === 'Errores de validación'
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  async updateStatusPlato(id: number, fields: updateStatusPlatoDto, usuario) {
+    if (usuario.nombreRol !== 'Propietario') {
+      throw new HttpException(
+        {
+          message:
+            'No tiene permisos para actualizar el estado del plato plato',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    try {
+      const validation = await validate(fields);
+      if (validation.length) {
+        throw {
+          message: 'Errores de validación',
+          errors: validation
+            .map((error) => Object.values(error.constraints))
+            .flat(),
+        };
+      }
+      const platoToUpdate = await this.findPLatoById(id);
+      if ([null, undefined].includes(platoToUpdate)) {
+        throw { message: 'El plato proporcionado no existe' };
+      }
+
+      if (platoToUpdate.restaurante.id_propietario !== usuario.id) {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            `El usuario ${usuario.nombre} no es propietario del restaurante asociado al plato que desea modificar`,
+          ],
+        };
+      }
+      // propiedades diferentes a las aceptadas
+      if (Object.keys(fields).some((key) => !['activo'].includes(key))) {
+        throw {
+          message: 'Solo esta permitido actualizar el estado del plato',
+        };
+      }
+      platoToUpdate.activo = fields.activo;
+      await this.platoRepository.updatePlato(platoToUpdate);
+      return {
+        message: `Se ${
+          platoToUpdate.activo ? 'activo' : 'desactivo'
+        } el plato exitosamente`,
+      };
     } catch (error) {
       throw new HttpException(
         {

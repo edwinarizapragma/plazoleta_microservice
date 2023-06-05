@@ -8,10 +8,10 @@ import { CategoriaEntity } from '../../database/typeorm/entities/Categoria.entit
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { createPlatoDto } from '../../src/platos/dto/createPlato.dto';
 import { updatePlatoDto } from '../../src/platos/dto/updatePlato.dto';
+import { updateStatusPlatoDto } from '../../src/platos/dto/updateStatusPlato.dto';
 import { PlatoRepository } from '../../src/platos/domain/repositories/PlatoRepository';
 import { CategoriaRepository } from '../../src/platos/domain/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
-
 describe('PlatosService', () => {
   let service: PlatosService;
   const validOwnerUser = {
@@ -234,6 +234,50 @@ describe('PlatosService', () => {
       await expect(
         service.updatePlato(-1, validFields, validOwnerUser),
       ).rejects.toThrow(HttpException);
+    });
+  });
+
+  describe('UpdateStatusPlatoFunction', () => {
+    it('test update plato status with valid input', async () => {
+      const validFields = new updateStatusPlatoDto();
+      validFields.activo = false;
+
+      const result = await service.updateStatusPlato(
+        18,
+        validFields,
+        validOwnerUser,
+      );
+      expect(result).toEqual({
+        message: 'Se desactivo el plato exitosamente',
+      });
+    });
+
+    it('test update status of a dish that belongs to another restaurant', async () => {
+      const validFields = new updateStatusPlatoDto();
+      validFields.activo = false;
+
+      try {
+        await service.updateStatusPlato(33, validFields, validOwnerUser);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.message).toBe('Errores de validación');
+      }
+    });
+
+    it('test update status plato with rol employee', async () => {
+      const validFields = new updateStatusPlatoDto();
+      validFields.activo = true;
+
+      try {
+        await service.updateStatusPlato(18, validFields, validEmployeeUser);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.FORBIDDEN);
+        expect(error.message).toBe(
+          'No tiene permisos para actualizar el estado del plato plato',
+        );
+      }
     });
   });
 });
