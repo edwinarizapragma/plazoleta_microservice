@@ -14,7 +14,27 @@ import { RestauranteRepository } from '../../src/restaurantes/domain/repositorie
 
 describe('PlatosService', () => {
   let service: PlatosService;
+  const validOwnerUser = {
+    id: 72,
+    nombre: 'Edwin Tobias',
+    apellido: 'Ariza Tellez',
+    numero_documento: 12345687987,
+    celular: '+573156487925',
+    correo: 'propietario@propietario.com',
+    id_rol: 2,
+    nombreRol: 'Propietario',
+  };
 
+  const validEmployeeUser = {
+    id: 77,
+    nombre: 'Dave Jhon',
+    apellido: 'Smith',
+    numero_documento: 45661234,
+    celular: '+573156487925',
+    correo: 'empleado@empleado.com',
+    id_rol: 3,
+    nombreRol: 'Empleado',
+  };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -45,11 +65,6 @@ describe('PlatosService', () => {
     expect(result).toBe(true);
   });
 
-  it('test restaurante when doesnt exist return true', async () => {
-    const result: boolean = await service.restaurantNotExists(-1);
-    expect(result).toBe(true);
-  });
-
   it('test when plato doesnt exist return null', async () => {
     const result: boolean = await service.findPLatoById(-1);
     expect(result).toBe(null);
@@ -65,13 +80,51 @@ describe('PlatosService', () => {
       fieldsToCreate.precio = 35000;
       fieldsToCreate.id_restaurante = 1;
       fieldsToCreate.url_imagen = '/storage/foto_arroz.png';
-      const result = await service.createPlato(fieldsToCreate);
+
+      const result = await service.createPlato(fieldsToCreate, validOwnerUser);
       expect(result).toEqual({
         nombre: 'Arroz chino',
         precio: 35000,
         descripcion:
           'Arroz chino con camarones, carne de cerdo, pollo y raíces',
       });
+    });
+
+    it('test create plato with user is not owner of restaurant', async () => {
+      const fieldsToCreate = new createPlatoDto();
+      fieldsToCreate.nombre = 'Arroz chino';
+      fieldsToCreate.id_categoria = 1;
+      fieldsToCreate.descripcion =
+        'Arroz chino con camarones, carne de cerdo, pollo y raíces';
+      fieldsToCreate.precio = 35000;
+      fieldsToCreate.id_restaurante = 20;
+      fieldsToCreate.url_imagen = '/storage/foto_arroz.png';
+
+      try {
+        await service.createPlato(fieldsToCreate, validOwnerUser);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.message).toBe('Errores de validación');
+      }
+    });
+
+    it('test create plato with rol employee', async () => {
+      const fieldsToCreate = new createPlatoDto();
+      fieldsToCreate.nombre = 'Arroz con pollo';
+      fieldsToCreate.id_categoria = 1;
+      fieldsToCreate.descripcion = 'Arroz con pollo y verduras';
+      fieldsToCreate.precio = 35000;
+      fieldsToCreate.id_restaurante = 20;
+      fieldsToCreate.url_imagen = '/storage/foto_arroz.png';
+
+      try {
+        await service.createPlato(fieldsToCreate, validEmployeeUser);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.FORBIDDEN);
+        expect(error.message).toBe('No tiene permisos para crear el plato');
+      }
     });
 
     it('test create plato with multiple validation error', async () => {
@@ -83,7 +136,7 @@ describe('PlatosService', () => {
       fieldsToCreate.id_restaurante = -1;
       fieldsToCreate.url_imagen = '';
       try {
-        await service.createPlato(fieldsToCreate);
+        await service.createPlato(fieldsToCreate, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
@@ -100,8 +153,9 @@ describe('PlatosService', () => {
       fieldsToCreate.precio = 35000;
       fieldsToCreate.id_restaurante = 999;
       fieldsToCreate.url_imagen = '/storage/foto_pollo.png';
+
       try {
-        await service.createPlato(fieldsToCreate);
+        await service.createPlato(fieldsToCreate, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
@@ -126,29 +180,60 @@ describe('PlatosService', () => {
       const validFields = new updatePlatoDto();
       validFields.precio = 12000;
       validFields.descripcion = 'Arroz con pollo y verduras';
-      const result = await service.updatePlato(18, validFields);
+
+      const result = await service.updatePlato(18, validFields, validOwnerUser);
       expect(result).toEqual({
         precio: 12000,
         descripcion: 'Arroz con pollo y verduras',
       });
     });
 
+    it('test update plato with user is not owner of restaurant', async () => {
+      const validFields = new updatePlatoDto();
+      validFields.precio = 12000;
+      validFields.descripcion = 'Arroz con pollo y verduras';
+
+      try {
+        await service.updatePlato(33, validFields, validOwnerUser);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.message).toBe('Errores de validación');
+      }
+    });
+
+    it('test update plato with rol employee', async () => {
+      const validFields = new updatePlatoDto();
+      validFields.precio = 12000;
+      validFields.descripcion = 'Arroz con pollo y verduras';
+
+      try {
+        await service.updatePlato(18, validFields, validEmployeeUser);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.FORBIDDEN);
+        expect(error.message).toBe(
+          'No tiene permisos para actualizar el plato',
+        );
+      }
+    });
+
     it('test update plato with invalid input', async () => {
       const fields = new updatePlatoDto();
       fields.descripcion = null;
       fields.precio = -20000;
-      await expect(service.updatePlato(18, fields)).rejects.toThrow(
-        HttpException,
-      );
+      await expect(
+        service.updatePlato(18, fields, validOwnerUser),
+      ).rejects.toThrow(HttpException);
     });
 
     it('test update plato wthit non existent plato id', async () => {
       const validFields = new updatePlatoDto();
       validFields.descripcion = 'new description';
       validFields.precio = 50000;
-      await expect(service.updatePlato(-1, validFields)).rejects.toThrow(
-        HttpException,
-      );
+      await expect(
+        service.updatePlato(-1, validFields, validOwnerUser),
+      ).rejects.toThrow(HttpException);
     });
   });
 });

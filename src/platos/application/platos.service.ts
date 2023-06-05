@@ -20,13 +20,16 @@ export class PlatosService {
     return [null, undefined].includes(searchCategory);
   }
 
-  async restaurantNotExists(id_restaurante: number): Promise<boolean> {
-    const searchRestaurante =
-      await this.restauranteRepository.findOnlyIdRestaurant(id_restaurante);
-    return [null, undefined].includes(searchRestaurante);
-  }
+  async createPlato(fields: createPlatoDto, usuario): Promise<any> {
+    if (usuario.nombreRol !== 'Propietario') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para crear el plato',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
 
-  async createPlato(fields: createPlatoDto): Promise<any> {
     try {
       const validationErrors = await validate(fields);
       if (validationErrors.length) {
@@ -41,13 +44,26 @@ export class PlatosService {
       if (await this.categoryNotExists(fields.id_categoria)) {
         errores.push('La categoría proporcionada no se encuentra registrada');
       }
-      if (await this.restaurantNotExists(fields.id_restaurante)) {
+      const searchRestaurante =
+        await this.restauranteRepository.findRestaurantById(
+          fields.id_restaurante,
+        );
+      if ([null, undefined].includes(searchRestaurante)) {
         errores.push('El restaurante proporcionado no se encuentra registrado');
       }
       if (errores.length) {
         throw {
           message: 'Errores de validación',
           errors: errores,
+        };
+      }
+
+      if (searchRestaurante.id_propietario !== usuario.id) {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            `El usuario ${usuario.nombre} no es propietario del restaurante proporcionado`,
+          ],
         };
       }
       fields.activo = true;
@@ -70,11 +86,16 @@ export class PlatosService {
   async findPLatoById(id: number): Promise<any> {
     return await this.platoRepository.findPLatoById(id);
   }
-  async platoNotExists(id: number): Promise<boolean> {
-    const result = await this.findPLatoById(id);
-    return [null, undefined].includes(result);
-  }
-  async updatePlato(id: number, fields: updatePlatoDto) {
+
+  async updatePlato(id: number, fields: updatePlatoDto, usuario) {
+    if (usuario.nombreRol !== 'Propietario') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para actualizar el plato',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     try {
       const validationErrors = await validate(fields);
       if (validationErrors.length) {
@@ -85,10 +106,19 @@ export class PlatosService {
             .flat(),
         };
       }
-      if (await this.platoNotExists(id)) {
+      const platoInfo = await this.findPLatoById(id);
+      if ([null, undefined].includes(platoInfo)) {
         throw { message: 'El id del plato proporcionado no existe' };
       }
 
+      if (platoInfo.restaurante.id_propietario !== usuario.id) {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            `El usuario ${usuario.nombre} no es propietario del restaurante asociado al plato que desea modificar`,
+          ],
+        };
+      }
       // propiedades diferentes a las aceptadas
       if (
         Object.keys(fields).some(

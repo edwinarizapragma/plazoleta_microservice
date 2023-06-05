@@ -15,7 +15,14 @@ export class PlatoRepository extends Repository<PlatoEntity> {
   }
 
   async findPLatoById(id: number): Promise<PlatoEntity> {
-    return await this.findOneBy({ id });
+    return await this.findOne({
+      relations: {
+        restaurante: true,
+      },
+      where: {
+        id,
+      },
+    });
   }
 
   async updatePlato(plato: PlatoEntity): Promise<PlatoEntity> {

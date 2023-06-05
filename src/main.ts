@@ -16,7 +16,7 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('restaurantes')
     .addTag('platos')
-    // .addBearerAuth()
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('swagger', app, document);

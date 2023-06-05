@@ -6,7 +6,15 @@ import { RestauranteRepository } from '../domain/repositories/RestauranteReposit
 export class RestaurantesService {
   constructor(private restauranteRepository: RestauranteRepository) {}
 
-  async create(fieldsToCreate: createRestauranteDto) {
+  async create(fieldsToCreate: createRestauranteDto, usuario) {
+    if (usuario.nombreRol !== 'Admin') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para crear el restaurante',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     try {
       const validationErrors = await validate(fieldsToCreate);
 

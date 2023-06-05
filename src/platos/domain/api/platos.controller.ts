@@ -1,10 +1,17 @@
-import { Controller, Post, Patch, Param, Body } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags, ApiParam } from '@nestjs/swagger';
+import { Controller, Post, Patch, Param, Body, Query } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PlatosService } from '../../application/platos.service';
 import { createPlatoDto } from '../../dto/createPlato.dto';
 import { updatePlatoDto } from '../../dto/updatePlato.dto';
 
 @ApiTags('platos')
+@ApiBearerAuth()
 @Controller('platos')
 export class PlatosController {
   constructor(private platoService: PlatosService) {}
@@ -13,14 +20,25 @@ export class PlatosController {
   @ApiOperation({ summary: 'Crear plato' })
   @ApiResponse({ status: 202, description: 'Plato creado' })
   @ApiResponse({ status: 400, description: 'Error de validación de campos' })
+  @ApiResponse({
+    status: 403,
+    description: 'No posee permisos para crear plato',
+  })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
-  async create(@Body() fieldsToCretePlato: createPlatoDto) {
-    return this.platoService.createPlato(fieldsToCretePlato);
+  async create(
+    @Body() fieldsToCretePlato: createPlatoDto,
+    @Query('usuario') usuario,
+  ) {
+    return this.platoService.createPlato(fieldsToCretePlato, usuario);
   }
   @Patch('/update/:id')
   @ApiOperation({ summary: 'Actualizar plato existente' })
   @ApiResponse({ status: 202, description: 'Plato actualizado' })
   @ApiResponse({ status: 400, description: 'Error de validación de campos' })
+  @ApiResponse({
+    status: 403,
+    description: 'No posee permisos para modificar plato',
+  })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
   @ApiParam({
     name: 'id',
@@ -32,7 +50,8 @@ export class PlatosController {
   async update(
     @Param('id') id: number,
     @Body() fieldsToUpdate: updatePlatoDto,
+    @Query('usuario') usuario,
   ) {
-    return this.platoService.updatePlato(id, fieldsToUpdate);
+    return this.platoService.updatePlato(id, fieldsToUpdate, usuario);
   }
 }

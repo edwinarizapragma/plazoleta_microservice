@@ -26,4 +26,7 @@ export class RestauranteRepository extends Repository<RestauranteEntity> {
       },
     });
   }
+  async findRestaurantById(id_restaurante: number): Promise<RestauranteEntity> {
+    return await this.findOneBy({ id: id_restaurante });
+  }
 }

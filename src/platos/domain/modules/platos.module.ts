@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { PlatosController } from '../api/platos.controller';
 import { PlatosService } from '../../application/platos.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,6 +8,7 @@ import { CategoriaEntity } from '../../../../database/typeorm/entities/Categoria
 import { PlatoRepository } from '../repositories/PlatoRepository';
 import { CategoriaRepository } from '../repositories/CategoriaRepository';
 import { RestauranteRepository } from '../../../restaurantes/domain/repositories/RestauranteRepository';
+import { TokenVerification } from '../../../../middleware/auth.middleware';
 @Module({
   imports: [
     TypeOrmModule.forFeature([RestauranteEntity, PlatoEntity, CategoriaEntity]),
@@ -20,4 +21,8 @@ import { RestauranteRepository } from '../../../restaurantes/domain/repositories
     CategoriaRepository,
   ],
 })
-export class PlatosModule {}
+export class PlatosModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TokenVerification).forRoutes('platos');
+  }
+}
