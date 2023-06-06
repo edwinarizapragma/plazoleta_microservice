@@ -74,7 +74,6 @@ export class RestaurantesService {
           throw err;
         });
     } catch (error) {
-      console.error('error', error);
       throw new HttpException(
         {
           message: error.message

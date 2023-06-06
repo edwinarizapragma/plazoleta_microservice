@@ -9,6 +9,7 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { createPlatoDto } from '../../src/platos/dto/createPlato.dto';
 import { updatePlatoDto } from '../../src/platos/dto/updatePlato.dto';
 import { updateStatusPlatoDto } from '../../src/platos/dto/updateStatusPlato.dto';
+import { listByRestaurantDto } from '../../src/platos/dto/listByRestaraunt.dto';
 import { PlatoRepository } from '../../src/platos/domain/repositories/PlatoRepository';
 import { CategoriaRepository } from '../../src/platos/domain/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
@@ -194,7 +195,7 @@ describe('PlatosService', () => {
       validFields.descripcion = 'Arroz con pollo y verduras';
 
       try {
-        await service.updatePlato(33, validFields, validOwnerUser);
+        await service.updatePlato(29, validFields, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
@@ -257,7 +258,7 @@ describe('PlatosService', () => {
       validFields.activo = false;
 
       try {
-        await service.updateStatusPlato(33, validFields, validOwnerUser);
+        await service.updateStatusPlato(29, validFields, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
@@ -276,6 +277,55 @@ describe('PlatosService', () => {
         expect(error.status).toBe(HttpStatus.FORBIDDEN);
         expect(error.message).toBe(
           'No tiene permisos para actualizar el estado del plato plato',
+        );
+      }
+    });
+  });
+
+  describe('listPlatosByRestaurantFunction', () => {
+    it('test list of dishes with valid input', async () => {
+      const params = new listByRestaurantDto();
+      params.id = 1;
+      params.perPage = 10;
+      params.page = 1;
+
+      const result = await service.listByRestaurant(params);
+      expect(result).toBeInstanceOf(Array);
+      expect(result[0]).toBeInstanceOf(Object);
+    });
+
+    it('test list of dishes with validation error', async () => {
+      const params = new listByRestaurantDto();
+      params.id = 1;
+      params.perPage = null;
+      params.page = 1;
+
+      try {
+        await service.listByRestaurant(params);
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.message).toBe('Errores de validación');
+        expect(error.response.error.errors).toHaveLength(3);
+      }
+    });
+
+    it('test list of dishes from a restaurant that does not exist', async () => {
+      const params = new listByRestaurantDto();
+      params.id = 999999999;
+      params.perPage = 5;
+      params.page = 2;
+
+      try {
+        await service.listByRestaurant(params);
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.message).toBe('Errores de validación');
+        expect(error.response.error.errors).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /El restaurante proporcionado no se encuentra registrado/,
+            ),
+          ]),
         );
       }
     });

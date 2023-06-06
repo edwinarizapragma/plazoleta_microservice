@@ -28,4 +28,8 @@ export class PlatoRepository extends Repository<PlatoEntity> {
   async updatePlato(plato: PlatoEntity): Promise<PlatoEntity> {
     return await this.save(plato);
   }
+
+  async listByRestaurantId(options): Promise<PlatoEntity[]> {
+    return await this.find(options);
+  }
 }
