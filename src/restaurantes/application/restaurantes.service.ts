@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { createRestauranteDto } from '../dto/restaurante.dto';
+import { createRestauranteDto } from '../dto/createRestaurant.dto';
+import { listRestaurantDto } from '../dto/listRestaurant.dto';
 import { validate } from 'class-validator';
 import { RestauranteRepository } from '../domain/repositories/RestauranteRepository';
 @Injectable()
@@ -30,6 +31,50 @@ export class RestaurantesService {
         await this.restauranteRepository.createNewRestaurant(fieldsToCreate);
       return { nombre, direccion, nit };
     } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message
+            ? error.message
+            : 'Error al crear el restaurante',
+          error,
+        },
+        error.message && error.message === 'Errores de validación'
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async listRestaurants(paginate: listRestaurantDto) {
+    try {
+      const validationPaginate = await validate(paginate);
+
+      if (validationPaginate.length) {
+        throw {
+          message: 'Errores de validación',
+          errors: validationPaginate
+            .map((error) => Object.values(error.constraints))
+            .flat(),
+        };
+      }
+      const options = {
+        select: {
+          nombre: true,
+          url_logo: true,
+        },
+        order: {
+          nombre: 'ASC',
+        },
+        skip: (paginate.page - 1) * paginate.perPage,
+        take: paginate.perPage,
+      };
+      return await this.restauranteRepository
+        .paginateRestaurants(options)
+        .catch((err) => {
+          throw err;
+        });
+    } catch (error) {
+      console.error('error', error);
       throw new HttpException(
         {
           message: error.message
