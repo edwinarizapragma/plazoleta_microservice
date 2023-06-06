@@ -26,6 +26,7 @@ dotenv.config();
         PlatoEntity,
       ],
       synchronize: false,
+      logging: true,
     }),
     RestaurantesModule,
     PlatosModule,

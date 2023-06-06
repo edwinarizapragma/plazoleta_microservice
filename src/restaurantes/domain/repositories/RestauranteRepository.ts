@@ -1,7 +1,7 @@
 import { DataSource, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { RestauranteEntity } from '../../../../database/typeorm/entities/Restaurante.entity';
-import { createRestauranteDto } from '../../dto/restaurante.dto';
+import { createRestauranteDto } from '../../dto/createRestaurant.dto';
 @Injectable()
 export class RestauranteRepository extends Repository<RestauranteEntity> {
   constructor(public readonly dataSource: DataSource) {
@@ -28,5 +28,9 @@ export class RestauranteRepository extends Repository<RestauranteEntity> {
   }
   async findRestaurantById(id_restaurante: number): Promise<RestauranteEntity> {
     return await this.findOneBy({ id: id_restaurante });
+  }
+
+  async paginateRestaurants(options): Promise<RestauranteEntity[]> {
+    return await this.find(options);
   }
 }
