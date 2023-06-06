@@ -51,14 +51,14 @@ export class RestaurantesController {
     name: 'perPage',
     description: 'Cantidad de registros por página',
     required: true,
-    example: '10',
+    example: 10,
     type: 'number',
   })
   @ApiParam({
     name: 'page',
     description: 'Número de página',
     required: true,
-    example: '1',
+    example: 1,
     type: 'number',
   })
   async list(

@@ -6,6 +6,7 @@ import { updateStatusPlatoDto } from '../dto/updateStatusPlato.dto';
 import { PlatoRepository } from '../domain/repositories/PlatoRepository';
 import { CategoriaRepository } from '../domain/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../../restaurantes/domain/repositories/RestauranteRepository';
+import { listByRestaurantDto } from '../dto/listByRestaraunt.dto';
 @Injectable()
 export class PlatosService {
   constructor(
@@ -203,6 +204,66 @@ export class PlatosService {
       throw new HttpException(
         {
           message: error.message ? error.message : 'Error al crear el plato',
+          error,
+        },
+        error.message && error.message === 'Errores de validación'
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async listByRestaurant(params: listByRestaurantDto) {
+    try {
+      const validationParams = await validate(params);
+
+      if (validationParams.length) {
+        throw {
+          message: 'Errores de validación',
+          errors: validationParams
+            .map((error) => Object.values(error.constraints))
+            .flat(),
+        };
+      }
+      const searchRestaurant =
+        await this.restauranteRepository.findRestaurantById(params.id);
+      if ([null, undefined].includes(searchRestaurant)) {
+        throw {
+          message: 'Errores de validación',
+          errors: [`El restaurante proporcionado no se encuentra registrado`],
+        };
+      }
+      const options = {
+        select: {
+          nombre: true,
+          descripcion: true,
+          precio: true,
+          url_imagen: true,
+        },
+        where: {
+          activo: true,
+          id_restaurante: params.id,
+        },
+        order: {
+          nombre: 'ASC',
+        },
+        skip: (params.page - 1) * params.perPage,
+        take: params.perPage,
+      };
+      if (params.id_categoria) {
+        options.where['id_categoria'] = params.id_categoria;
+      }
+      return await this.platoRepository
+        .listByRestaurantId(options)
+        .catch((err) => {
+          throw err;
+        });
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message
+            ? error.message
+            : 'Error al crear el restaurante',
           error,
         },
         error.message && error.message === 'Errores de validación'

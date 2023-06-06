@@ -1,15 +1,26 @@
-import { Controller, Post, Patch, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Patch,
+  Param,
+  Body,
+  Query,
+  Get,
+  ParseIntPipe,
+} from '@nestjs/common';
 import {
   ApiOperation,
   ApiResponse,
   ApiTags,
   ApiParam,
   ApiBearerAuth,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { PlatosService } from '../../application/platos.service';
 import { createPlatoDto } from '../../dto/createPlato.dto';
 import { updatePlatoDto } from '../../dto/updatePlato.dto';
 import { updateStatusPlatoDto } from '../../dto/updateStatusPlato.dto';
+import { listByRestaurantDto } from '../../dto/listByRestaraunt.dto';
 @ApiTags('platos')
 @ApiBearerAuth()
 @Controller('platos')
@@ -77,5 +88,55 @@ export class PlatosController {
     @Query('usuario') usuario,
   ) {
     return this.platoService.updateStatusPlato(id, fieldsToUpdate, usuario);
+  }
+
+  @Get('/list-by-restaurant/:id')
+  @ApiOperation({ summary: 'Listar platos por el id del restaurante' })
+  @ApiResponse({
+    status: 202,
+    description: 'Litado de platos                             ',
+  })
+  @ApiResponse({ status: 400, description: 'Error de validación de campos' })
+  @ApiResponse({
+    status: 403,
+    description: 'No posee permisos para modificar plato',
+  })
+  @ApiResponse({ status: 500, description: 'Error interno del servidor' })
+  @ApiParam({
+    name: 'id',
+    description: 'id del restaurante ',
+    required: true,
+    type: 'number',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'perPage',
+    description: 'Cantidad de registros por página',
+    required: true,
+    example: 10,
+    type: 'number',
+  })
+  @ApiQuery({
+    name: 'page',
+    description: 'Número de página',
+    required: true,
+    example: 1,
+    type: 'number',
+  })
+  @ApiQuery({
+    name: 'id_categoria',
+    description: 'id de la categoría que desea filtrar',
+    required: false,
+    example: null,
+    type: 'number',
+  })
+  async listByRestaurant(
+    @Param('id') id: number,
+    @Query('perPage', ParseIntPipe) perPage: number,
+    @Query('page', ParseIntPipe) page: number,
+    @Query('id_categoria') id_categoria?: number,
+  ) {
+    const params: listByRestaurantDto = { id, perPage, page, id_categoria };
+    return this.platoService.listByRestaurant(params);
   }
 }
