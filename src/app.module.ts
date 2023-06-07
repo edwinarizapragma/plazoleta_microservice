@@ -7,6 +7,7 @@ import { CategoriaEntity } from '../database/typeorm/entities/Categoria.entity';
 import { PedidoEntity } from '../database/typeorm/entities/Pedido.entity';
 import { PedidoPLatoEntity } from '../database/typeorm/entities/PedidoPlato.entity';
 import { PlatoEntity } from '../database/typeorm/entities/Plato.entity';
+import { PedidosModule } from './pedidos/domain/modules/pedidos.module';
 import * as dotenv from 'dotenv';
 dotenv.config();
 @Module({
@@ -30,6 +31,7 @@ dotenv.config();
     }),
     RestaurantesModule,
     PlatosModule,
+    PedidosModule,
   ],
   controllers: [],
   providers: [],

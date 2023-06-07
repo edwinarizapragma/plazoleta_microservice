@@ -1,4 +1,4 @@
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { PlatoEntity } from '../../../../database/typeorm/entities/Plato.entity';
 import { createPlatoDto } from '../../dto/createPlato.dto';
@@ -31,5 +31,18 @@ export class PlatoRepository extends Repository<PlatoEntity> {
 
   async listByRestaurantId(options): Promise<PlatoEntity[]> {
     return await this.find(options);
+  }
+
+  async searchPlatosByIds(ids: Array<number>): Promise<PlatoEntity[]> {
+    return this.find({
+      select: {
+        nombre: true,
+        id_restaurante: true,
+      },
+      where: {
+        activo: true,
+        id: In(ids),
+      },
+    });
   }
 }

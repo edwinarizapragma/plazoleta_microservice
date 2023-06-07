@@ -32,9 +32,10 @@ export class Pedidos1685559088410 implements MigrationInterface {
           {
             name: 'id_chef',
             type: 'int',
+            isNullable: true,
           },
           {
-            name: 'id_restuarante',
+            name: 'id_restaurante',
             type: 'int',
           },
         ],
@@ -44,7 +45,7 @@ export class Pedidos1685559088410 implements MigrationInterface {
     await queryRunner.createForeignKey(
       'pedidos',
       new TableForeignKey({
-        columnNames: ['id_restuarante'],
+        columnNames: ['id_restaurante'],
         referencedColumnNames: ['id'],
         referencedTableName: 'restaurantes',
         onDelete: 'CASCADE',
