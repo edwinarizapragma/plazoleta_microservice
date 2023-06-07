@@ -20,9 +20,6 @@ export class PedidoEntity {
   fecha: Date;
 
   @Column()
-  nombre: string;
-
-  @Column()
   estado: string;
 
   @Column()
@@ -38,7 +35,4 @@ export class PedidoEntity {
   @OneToMany(() => PedidoPLatoEntity, (pedido_plato) => pedido_plato.pedido)
   @JoinColumn({ name: 'id' })
   pedidos_platos: PedidoPLatoEntity[];
-  /* @OneToOne(() => CategoriaEntity)
-  @JoinColumn({ name: 'id_categoria' })
-  categoria: CategoriaEntity;*/
 }

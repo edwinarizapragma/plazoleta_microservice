@@ -145,7 +145,9 @@ export class PlatosService {
     } catch (error) {
       throw new HttpException(
         {
-          message: error.message ? error.message : 'Error al crear el plato',
+          message: error.message
+            ? error.message
+            : 'Error al actualizar el plato',
           error,
         },
         error.message && error.message === 'Errores de validación'
@@ -203,7 +205,9 @@ export class PlatosService {
     } catch (error) {
       throw new HttpException(
         {
-          message: error.message ? error.message : 'Error al crear el plato',
+          message: error.message
+            ? error.message
+            : 'Error al actualizar el estado del plato',
           error,
         },
         error.message && error.message === 'Errores de validación'
