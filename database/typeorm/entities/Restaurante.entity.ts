@@ -7,7 +7,7 @@ import {
 } from 'typeorm';
 import { PlatoEntity } from './Plato.entity';
 import { PedidoEntity } from './Pedido.entity';
-
+import { EmpleadoRestauranteEntity } from './EmpeladoRestaurante.entity';
 @Entity('restaurantes')
 export class RestauranteEntity {
   @PrimaryGeneratedColumn()
@@ -38,4 +38,11 @@ export class RestauranteEntity {
   @OneToMany(() => PedidoEntity, (pedido) => pedido.restaurante)
   @JoinColumn({ name: 'id' })
   pedidos: PedidoEntity[];
+
+  @OneToMany(
+    () => EmpleadoRestauranteEntity,
+    (empleado_restaurante) => empleado_restaurante.restaurante,
+  )
+  @JoinColumn({ name: 'id' })
+  empleados_restaurantes: EmpleadoRestauranteEntity[];
 }

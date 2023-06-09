@@ -36,6 +36,17 @@ describe('PlatosService', () => {
     id_rol: 3,
     nombreRol: 'Empleado',
   };
+
+  const validClientUser = {
+    id: 89,
+    nombre: 'Sarah',
+    apellido: 'Smith',
+    numero_documento: 31578902,
+    celular: '+573215487632',
+    correo: 'sarahsmith@example.com',
+    id_rol: 4,
+    nombreRol: 'Cliente',
+  };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -285,23 +296,21 @@ describe('PlatosService', () => {
   describe('listPlatosByRestaurantFunction', () => {
     it('test list of dishes with valid input', async () => {
       const params = new listByRestaurantDto();
-      params.id = 1;
       params.perPage = 10;
       params.page = 1;
 
-      const result = await service.listByRestaurant(params);
+      const result = await service.listByRestaurant(1, params, validClientUser);
       expect(result).toBeInstanceOf(Array);
       expect(result[0]).toBeInstanceOf(Object);
     });
 
     it('test list of dishes with validation error', async () => {
       const params = new listByRestaurantDto();
-      params.id = 1;
       params.perPage = null;
       params.page = 1;
 
       try {
-        await service.listByRestaurant(params);
+        await service.listByRestaurant(1, params, validClientUser);
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
@@ -311,12 +320,11 @@ describe('PlatosService', () => {
 
     it('test list of dishes from a restaurant that does not exist', async () => {
       const params = new listByRestaurantDto();
-      params.id = 999999999;
       params.perPage = 5;
       params.page = 2;
 
       try {
-        await service.listByRestaurant(params);
+        await service.listByRestaurant(999999, params, validClientUser);
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');

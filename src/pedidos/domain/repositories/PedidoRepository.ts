@@ -43,4 +43,8 @@ export class PedidoRepository extends Repository<PedidoEntity> {
       where: { id_cliente: id_cliente, estado: In(estados) },
     });
   }
+
+  async listPedidos(options): Promise<PedidoEntity[]> {
+    return this.find(options);
+  }
 }

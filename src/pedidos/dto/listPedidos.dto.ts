@@ -1,6 +1,14 @@
-import { IsInt, IsNotEmpty, IsOptional, IsPositive } from 'class-validator';
+import {
+  IsInt,
+  IsPositive,
+  IsNotEmpty,
+  IsString,
+  IsOptional,
+  IsIn,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
-export class listByRestaurantDto {
+
+export class listPedidosDto {
   @Transform(
     ({ value }) => (typeof value === 'string' ? parseInt(value) : value),
     { toClassOnly: true },
@@ -31,16 +39,11 @@ export class listByRestaurantDto {
   })
   page: number;
 
-  @Transform(
-    ({ value }) => (typeof value === 'string' ? parseInt(value) : value),
-    { toClassOnly: true },
-  )
-  @IsInt({
-    message: 'La categoría debe ser un número entero',
-  })
-  @IsPositive({
-    message: 'La categoría debe ser positivo',
+  @IsString({ message: 'El estado debe ser una cadena de texto' })
+  @IsIn(['pendiente', 'en_preparacion', 'listo', 'entregado', 'cancelado'], {
+    message:
+      'El estado debe estar dentro de uno de los siguientes valores: pendiente, en_preparacion, listo, entregado, cancelado',
   })
   @IsOptional()
-  id_categoria?: number;
+  estado?: string;
 }

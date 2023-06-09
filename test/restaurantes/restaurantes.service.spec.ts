@@ -9,6 +9,16 @@ import { AppModule } from '../../src/app.module';
 import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
 describe('RestaurantesService', () => {
   let service: RestaurantesService;
+  const validClientUser = {
+    id: 89,
+    nombre: 'Sarah',
+    apellido: 'Smith',
+    numero_documento: 31578902,
+    celular: '+573215487632',
+    correo: 'sarahsmith@example.com',
+    id_rol: 4,
+    nombreRol: 'Cliente',
+  };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [AppModule, TypeOrmModule.forFeature([RestauranteEntity])],
@@ -142,16 +152,17 @@ describe('RestaurantesService', () => {
       const params = new listRestaurantDto();
       params.perPage = 10;
       params.page = 1;
-      const result = await service.listRestaurants(params);
+      const result = await service.listRestaurants(params, validClientUser);
       expect(result).toBeInstanceOf(Array);
       expect(result[0]).toBeInstanceOf(Object);
     });
+
     it('test list restaurants with validation error ', async () => {
       const params = new listRestaurantDto();
       params.perPage = null;
       params.page = -1;
       try {
-        await service.listRestaurants(params);
+        await service.listRestaurants(params, validClientUser);
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
@@ -162,7 +173,7 @@ describe('RestaurantesService', () => {
       const params = new listRestaurantDto();
       params.perPage = 5;
       params.page = 9999999;
-      const result = await service.listRestaurants(params);
+      const result = await service.listRestaurants(params, validClientUser);
       expect(result).toEqual([]);
     });
   });

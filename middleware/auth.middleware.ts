@@ -35,7 +35,7 @@ export class TokenVerification implements NestMiddleware {
             message: 'Error al validar el token',
             error: e,
           },
-          HttpStatus.INTERNAL_SERVER_ERROR,
+          e.statusCode ? e.statusCode : HttpStatus.INTERNAL_SERVER_ERROR,
         );
       });
     next();

@@ -217,7 +217,15 @@ export class PlatosService {
     }
   }
 
-  async listByRestaurant(params: listByRestaurantDto) {
+  async listByRestaurant(id: number, params: listByRestaurantDto, usuario) {
+    if (usuario.nombreRol !== 'Cliente') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para crear el restaurante',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     try {
       const validationParams = await validate(params);
 
@@ -230,7 +238,7 @@ export class PlatosService {
         };
       }
       const searchRestaurant =
-        await this.restauranteRepository.findRestaurantById(params.id);
+        await this.restauranteRepository.findRestaurantById(id);
       if ([null, undefined].includes(searchRestaurant)) {
         throw {
           message: 'Errores de validación',
@@ -246,7 +254,7 @@ export class PlatosService {
         },
         where: {
           activo: true,
-          id_restaurante: params.id,
+          id_restaurante: id,
         },
         order: {
           nombre: 'ASC',

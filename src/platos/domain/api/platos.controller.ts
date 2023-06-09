@@ -132,11 +132,9 @@ export class PlatosController {
   })
   async listByRestaurant(
     @Param('id') id: number,
-    @Query('perPage', ParseIntPipe) perPage: number,
-    @Query('page', ParseIntPipe) page: number,
-    @Query('id_categoria') id_categoria?: number,
+    @Query() params: listByRestaurantDto,
+    @Query('usuario') usuario,
   ) {
-    const params: listByRestaurantDto = { id, perPage, page, id_categoria };
-    return this.platoService.listByRestaurant(params);
+    return this.platoService.listByRestaurant(id, params, usuario);
   }
 }

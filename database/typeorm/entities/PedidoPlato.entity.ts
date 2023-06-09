@@ -28,6 +28,6 @@ export class PedidoPLatoEntity {
   pedido: PedidoEntity;
 
   @ManyToOne(() => PlatoEntity, (plato) => plato.pedidos_platos)
-  @JoinColumn({ name: 'id_pedido' })
+  @JoinColumn({ name: 'id_plato' })
   plato: PlatoEntity;
 }

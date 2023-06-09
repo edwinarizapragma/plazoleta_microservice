@@ -5,11 +5,11 @@ import {
   TableForeignKey,
 } from 'typeorm';
 
-export class Pedidos1685559088410 implements MigrationInterface {
+export class EmpleadoRestaurante1686241164465 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'pedidos',
+        name: 'empleados_restaurantes',
         columns: [
           {
             name: 'id',
@@ -18,37 +18,19 @@ export class Pedidos1685559088410 implements MigrationInterface {
             isGenerated: true,
           },
           {
-            name: 'id_cliente',
+            name: 'id_empleado',
             type: 'int',
-          },
-          {
-            name: 'fecha',
-            type: 'timestamp',
-          },
-          {
-            name: 'estado',
-            type: 'varchar',
-          },
-          {
-            name: 'id_chef',
-            type: 'int',
-            isNullable: true,
           },
           {
             name: 'id_restaurante',
             type: 'int',
-          },
-          {
-            name: 'codigo_verificacion',
-            type: 'varchara',
-            isNullable: true,
           },
         ],
       }),
       true,
     );
     await queryRunner.createForeignKey(
-      'pedidos',
+      'empleados_restaurantes',
       new TableForeignKey({
         columnNames: ['id_restaurante'],
         referencedColumnNames: ['id'],
@@ -59,6 +41,6 @@ export class Pedidos1685559088410 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('pedidos');
+    await queryRunner.dropTable('empleados_restaurantes');
   }
 }

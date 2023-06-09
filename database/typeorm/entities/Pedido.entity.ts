@@ -28,6 +28,9 @@ export class PedidoEntity {
   @Column()
   id_restaurante: number;
 
+  @Column()
+  codigo_verificacion: string;
+
   @ManyToOne(() => RestauranteEntity, (restaurante) => restaurante.pedidos)
   @JoinColumn({ name: 'id_restaurante' })
   restaurante: RestauranteEntity;

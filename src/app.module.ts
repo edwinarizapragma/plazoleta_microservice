@@ -7,7 +7,9 @@ import { CategoriaEntity } from '../database/typeorm/entities/Categoria.entity';
 import { PedidoEntity } from '../database/typeorm/entities/Pedido.entity';
 import { PedidoPLatoEntity } from '../database/typeorm/entities/PedidoPlato.entity';
 import { PlatoEntity } from '../database/typeorm/entities/Plato.entity';
+import { EmpleadoRestauranteEntity } from '../database/typeorm/entities/EmpeladoRestaurante.entity';
 import { PedidosModule } from './pedidos/domain/modules/pedidos.module';
+import { EmpleadosRestaurantesModule } from './empleados_restaurantes/domain/modules/empleados_restaurantes.module';
 import * as dotenv from 'dotenv';
 dotenv.config();
 @Module({
@@ -25,6 +27,7 @@ dotenv.config();
         PedidoEntity,
         PedidoPLatoEntity,
         PlatoEntity,
+        EmpleadoRestauranteEntity,
       ],
       synchronize: false,
       logging: true,
@@ -32,6 +35,7 @@ dotenv.config();
     RestaurantesModule,
     PlatosModule,
     PedidosModule,
+    EmpleadosRestaurantesModule,
   ],
   controllers: [],
   providers: [],

@@ -15,6 +15,10 @@ import { PedidoEntity } from '../../database/typeorm/entities/Pedido.entity';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
 import { PedidoPLatoEntity } from '../../database/typeorm/entities/PedidoPlato.entity';
+import { listPedidosDto } from '../../src/pedidos/dto/listPedidos.dto';
+import { EmpleadosRestaurantesService } from '../../src/empleados_restaurantes/applications/empleados_restaurantes.service';
+import { EmpleadosRestaurantesRepository } from '../../src/empleados_restaurantes/domain/repositories/EmpleadoRestauranteRepository';
+import { UsuariosMicroserviceService } from '../../src/empleados_restaurantes/domain/infrastructure/axios/usuarios_micro.service';
 describe('PedidosService', () => {
   let service: PedidosService;
   const usuarioClienteValido = {
@@ -37,6 +41,28 @@ describe('PedidosService', () => {
     id_rol: 4,
     nombreRol: 'Cliente',
   };
+
+  const usuarioEmpleado = {
+    id: 77,
+    nombre: 'Dave Jhon',
+    apellido: 'Smith',
+    numero_documento: 45661234,
+    celular: '+573156487925',
+    correo: 'empleado@empleado.com',
+    id_rol: 3,
+    nombreRol: 'Empleado',
+  };
+
+  const usuarioEmpleado2 = {
+    id: 94,
+    nombre: 'Edwin',
+    apellido: 'Ariza',
+    numero_documento: 1235678,
+    celular: '+573156487925',
+    correo: 'edwina@gmail.com',
+    id_rol: 3,
+    nombreRol: 'Empleado',
+  };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -54,6 +80,9 @@ describe('PedidosService', () => {
         RestauranteRepository,
         PedidosPlatosRepository,
         PlatoRepository,
+        EmpleadosRestaurantesService,
+        EmpleadosRestaurantesRepository,
+        UsuariosMicroserviceService,
       ],
     }).compile();
 
@@ -179,6 +208,37 @@ describe('PedidosService', () => {
         expect(error.message).toBe('Errores de validación');
         expect(error.response.error.errors).toHaveLength(3);
       }
+    });
+  });
+
+  describe('listPedidosFunction', () => {
+    it('list with valid input', async () => {
+      const filters = new listPedidosDto();
+      filters.page = 1;
+      filters.perPage = 10;
+      const result = await service.listPedidos(filters, usuarioEmpleado);
+      expect(result.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('list with validation errors ', async () => {
+      const filters = new listPedidosDto();
+      filters.page = -1;
+      filters.perPage = null;
+      filters.estado = '90988';
+
+      await expect(
+        service.listPedidos(filters, usuarioEmpleado),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('list with employee has no assigned restaurant', async () => {
+      const filters = new listPedidosDto();
+      filters.page = 1;
+      filters.perPage = 10;
+
+      await expect(
+        service.listPedidos(filters, usuarioEmpleado2),
+      ).rejects.toThrow(HttpException);
     });
   });
 });

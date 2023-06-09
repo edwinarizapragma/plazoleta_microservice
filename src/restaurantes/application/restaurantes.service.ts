@@ -45,7 +45,15 @@ export class RestaurantesService {
     }
   }
 
-  async listRestaurants(paginate: listRestaurantDto) {
+  async listRestaurants(paginate: listRestaurantDto, usuario) {
+    if (usuario.nombreRol !== 'Cliente') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para crear el restaurante',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
     try {
       const validationPaginate = await validate(paginate);
 

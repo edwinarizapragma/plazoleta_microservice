@@ -1,16 +1,9 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Query,
-  Get,
-  Param,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Post, Body, Query, Get } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -38,7 +31,7 @@ export class RestaurantesController {
     return await this.restaurantesService.create(fieldsToCreate, usuario);
   }
 
-  @Get('/list/:perPage/:page')
+  @Get('/list')
   @ApiOperation({ summary: 'Listar restaurantes alfabéticamente' })
   @ApiResponse({ status: 202, description: 'Listado de restaurantes' })
   @ApiResponse({ status: 400, description: 'Error de validación de campos' })
@@ -47,25 +40,21 @@ export class RestaurantesController {
     description: 'Error de inicio de sesión o token invalido',
   })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
-  @ApiParam({
+  @ApiQuery({
     name: 'perPage',
     description: 'Cantidad de registros por página',
     required: true,
     example: 10,
     type: 'number',
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'page',
     description: 'Número de página',
     required: true,
     example: 1,
     type: 'number',
   })
-  async list(
-    @Param('perPage', ParseIntPipe) perPage: number,
-    @Param('page', ParseIntPipe) page: number,
-  ) {
-    const paginate: listRestaurantDto = { perPage, page };
-    return await this.restaurantesService.listRestaurants(paginate);
+  async list(@Query() paginate: listRestaurantDto, @Query('usuario') usuario) {
+    return await this.restaurantesService.listRestaurants(paginate, usuario);
   }
 }
