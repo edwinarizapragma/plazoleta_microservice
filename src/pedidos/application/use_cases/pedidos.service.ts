@@ -8,6 +8,7 @@ import { PlatoRepository } from '../../../platos/infrastructure/repositories/Pla
 import { validate } from 'class-validator';
 import { getErrorMessages } from '../../../../util/errors/getValidationErrorMessages';
 import { EmpleadosRestaurantesService } from '../../../empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
+import { takeOrderDto } from '../../interfaces/dto/takeOrderDto.dto';
 @Injectable()
 export class PedidosService {
   constructor(
@@ -111,6 +112,19 @@ export class PedidosService {
     }
   }
 
+  async employeeHasRestaurant(usuario) {
+    const employeeRestaurant =
+      await this.empleadoRestauranteService.findByEmployee(usuario.id);
+    if (!employeeRestaurant) {
+      throw {
+        message: 'Errores de validación',
+        errors: [
+          `El usuario ${usuario.nombre} ${usuario.apellido} no pertenece a ningún restaurante`,
+        ],
+      };
+    }
+    return employeeRestaurant;
+  }
   async listPedidos(filters: listPedidosDto, usuario) {
     if (usuario.nombreRol !== 'Empleado') {
       throw new HttpException(
@@ -128,16 +142,9 @@ export class PedidosService {
           errors: getErrorMessages(validationFilters),
         };
       }
-      const searchEmployeeRestaurant =
-        await this.empleadoRestauranteService.findByEmployee(usuario.id);
-      if (!searchEmployeeRestaurant) {
-        throw {
-          message: 'Errores de validación',
-          errors: [
-            `El usuario ${usuario.nombre} ${usuario.apellido} no pertenece a ningún restaurante`,
-          ],
-        };
-      }
+      const searchEmployeeRestaurant = await this.employeeHasRestaurant(
+        usuario,
+      );
       const options = {
         relations: {
           pedidos_platos: {
@@ -170,6 +177,62 @@ export class PedidosService {
           }),
         };
       });
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message ? error.message : 'Error al crear el pedido',
+          error: error.errors ? error.errors : error,
+        },
+        error.message && error.message === 'Errores de validación'
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async tomarPedidos(
+    body: takeOrderDto,
+    usuario,
+  ): Promise<{ message: string } | HttpException> {
+    if (usuario.nombreRol !== 'Empleado') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para realizar esta acción',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    try {
+      const validationFilters = await validate(body);
+      if (validationFilters.length) {
+        throw {
+          message: 'Errores de validación',
+          errors: getErrorMessages(validationFilters),
+        };
+      }
+      const searchEmployeeRestaurant = await this.employeeHasRestaurant(
+        usuario,
+      );
+      const ordersData = await this.pedidoRepository.getPedidosById(
+        body.pedidos,
+        searchEmployeeRestaurant.id_restaurante,
+      );
+      if (ordersData.length !== body.pedidos.length) {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            'Algunos pedidos no pertenecen al restaurante que posee el empleado o ya se encuentran en preparación o cancelados',
+          ],
+        };
+      }
+      await this.pedidoRepository
+        .assignChef(ordersData, usuario.id)
+        .catch((err) => {
+          throw err;
+        });
+      return {
+        message: `Se ha asignado ${body.pedidos.length} pedido(s) a ${usuario.nombre} ${usuario.apellido}`,
+      };
     } catch (error) {
       throw new HttpException(
         {

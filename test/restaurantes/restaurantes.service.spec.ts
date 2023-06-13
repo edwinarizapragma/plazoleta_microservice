@@ -58,7 +58,7 @@ describe('RestaurantesService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(7);
+        expect(error.response.error).toHaveLength(7);
       }
     });
 
@@ -167,7 +167,7 @@ describe('RestaurantesService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(4);
+        expect(error.response.error).toHaveLength(4);
       }
     });
     it('test list restaurants with paginate params that return an empty list', async () => {

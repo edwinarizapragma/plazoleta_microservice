@@ -3,6 +3,7 @@ import { createRestauranteDto } from '../../interfaces/dto/createRestaurant.dto'
 import { listRestaurantDto } from '../../interfaces/dto/listRestaurant.dto';
 import { validate } from 'class-validator';
 import { RestauranteRepository } from '../../infrastructure/repositories/RestauranteRepository';
+import { getErrorMessages } from '../../../../util/errors/getValidationErrorMessages';
 @Injectable()
 export class RestaurantesService {
   constructor(private restauranteRepository: RestauranteRepository) {}
@@ -22,9 +23,7 @@ export class RestaurantesService {
       if (validationErrors.length) {
         throw {
           message: 'Errores de validación',
-          errors: validationErrors
-            .map((error) => Object.values(error.constraints))
-            .flat(),
+          errors: getErrorMessages(validationErrors),
         };
       }
       const { nombre, direccion, nit } =
@@ -36,7 +35,7 @@ export class RestaurantesService {
           message: error.message
             ? error.message
             : 'Error al crear el restaurante',
-          error,
+          error: error.errors ? error.errors : error,
         },
         error.message && error.message === 'Errores de validación'
           ? HttpStatus.BAD_REQUEST
@@ -60,9 +59,7 @@ export class RestaurantesService {
       if (validationPaginate.length) {
         throw {
           message: 'Errores de validación',
-          errors: validationPaginate
-            .map((error) => Object.values(error.constraints))
-            .flat(),
+          errors: getErrorMessages(validationPaginate),
         };
       }
       const options = {
@@ -87,7 +84,7 @@ export class RestaurantesService {
           message: error.message
             ? error.message
             : 'Error al crear el restaurante',
-          error,
+          error: error.errors ? error.errors : error,
         },
         error.message && error.message === 'Errores de validación'
           ? HttpStatus.BAD_REQUEST

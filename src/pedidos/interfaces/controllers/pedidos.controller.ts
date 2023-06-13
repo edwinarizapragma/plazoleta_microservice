@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Query, Get } from '@nestjs/common';
+import { Controller, Post, Body, Query, Get, Patch } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -9,6 +9,7 @@ import {
 import { PedidosService } from '../../application/use_cases/pedidos.service';
 import { createPedidoDto } from '../dto/createPedido.dto';
 import { listPedidosDto } from '../dto/listPedidos.dto';
+import { takeOrderDto } from '../dto/takeOrderDto.dto';
 @ApiTags('pedidos')
 @ApiBearerAuth()
 @Controller('pedidos')
@@ -74,5 +75,22 @@ export class PedidosController {
     @Query() params: listPedidosDto,
   ) {
     return this.pedidoService.listPedidos(params, usuario);
+  }
+
+  @Patch('/take-orders')
+  @ApiOperation({ summary: 'Tomar uno o varios pedidos' })
+  @ApiResponse({ status: 202, description: 'Pedidos tomados' })
+  @ApiResponse({ status: 400, description: 'Error de validación de campos' })
+  @ApiResponse({
+    status: 401,
+    description: 'No posee token o esta vencido',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'No posee permisos para tomar los pedidos',
+  })
+  @ApiResponse({ status: 500, description: 'Error interno del servidor' })
+  async takeOrders(@Body() orders: takeOrderDto, @Query('usuario') usuario) {
+    return await this.pedidoService.tomarPedidos(orders, usuario);
   }
 }

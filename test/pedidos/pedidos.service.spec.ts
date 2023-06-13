@@ -18,6 +18,7 @@ import {
   PlatoListDto,
 } from '../../src/pedidos/interfaces/dto/createPedido.dto';
 import { listPedidosDto } from '../../src/pedidos/interfaces/dto/listPedidos.dto';
+import { takeOrderDto } from '../../src/pedidos/interfaces/dto/takeOrderDto.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('PedidosService', () => {
@@ -61,6 +62,17 @@ describe('PedidosService', () => {
     numero_documento: 1235678,
     celular: '+573156487925',
     correo: 'edwina@gmail.com',
+    id_rol: 3,
+    nombreRol: 'Empleado',
+  };
+
+  const usuarioEmpleado3 = {
+    id: 95,
+    nombre: 'Jorge',
+    apellido: 'Puentes',
+    numero_documento: 456789,
+    celular: '+573156487944',
+    correo: 'jorge@jorge.com',
     id_rol: 3,
     nombreRol: 'Empleado',
   };
@@ -134,7 +146,7 @@ describe('PedidosService', () => {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toEqual(
+        expect(error.response.error).toEqual(
           expect.arrayContaining([
             expect.stringMatching(
               /Tienes pedidos aún en proceso, no puedes realizar mas pedidos/,
@@ -162,7 +174,7 @@ describe('PedidosService', () => {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toEqual(
+        expect(error.response.error).toEqual(
           expect.arrayContaining([
             expect.stringMatching(
               /El restaurante proporcionado no se encuentra registrado/,
@@ -185,7 +197,7 @@ describe('PedidosService', () => {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(1);
+        expect(error.response.error).toHaveLength(1);
       }
     });
 
@@ -207,7 +219,7 @@ describe('PedidosService', () => {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(3);
+        expect(error.response.error).toHaveLength(3);
       }
     });
   });
@@ -238,8 +250,49 @@ describe('PedidosService', () => {
       filters.perPage = 10;
 
       await expect(
-        service.listPedidos(filters, usuarioEmpleado2),
+        service.listPedidos(filters, usuarioEmpleado3),
       ).rejects.toThrow(HttpException);
+    });
+  });
+
+  describe('takeOrdersFunction', () => {
+    it('take an order with valid input', async () => {
+      const body = new takeOrderDto();
+      body.pedidos = [2];
+
+      const result = await service.tomarPedidos(body, usuarioEmpleado2);
+      expect(result).toEqual({
+        message: `Se ha asignado ${body.pedidos.length} pedido(s) a ${usuarioEmpleado2.nombre} ${usuarioEmpleado2.apellido}`,
+      });
+    });
+
+    it('take an order with invalid input', async () => {
+      const body = new takeOrderDto();
+      body.pedidos = [-2, null];
+
+      await expect(
+        service.tomarPedidos(body, usuarioEmpleado2),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('take an order that does not belong to the employee', async () => {
+      const body = new takeOrderDto();
+      body.pedidos = [1, 2];
+
+      try {
+        await service.tomarPedidos(body, usuarioEmpleado);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.message).toBe('Errores de validación');
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /Algunos pedidos no pertenecen al restaurante que posee el empleado o ya se encuentran en preparación o cancelados/,
+            ),
+          ]),
+        );
+      }
     });
   });
 });

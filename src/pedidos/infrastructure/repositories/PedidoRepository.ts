@@ -1,4 +1,4 @@
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { Injectable } from '@nestjs/common';
 import { PedidoEntity } from '../../../../database/typeorm/entities/Pedido.entity';
 import { PedidosPlatosRepository } from './PedidosPlatosRepository';
@@ -46,5 +46,39 @@ export class PedidoRepository extends Repository<PedidoEntity> {
 
   async listPedidos(options): Promise<PedidoEntity[]> {
     return this.find(options);
+  }
+
+  async getPedidosById(
+    ids: Array<number>,
+    id_restaurante: number,
+  ): Promise<PedidoEntity[]> {
+    return this.find({
+      where: {
+        id: In(ids),
+        id_restaurante: id_restaurante,
+        id_chef: IsNull(),
+        estado: 'pendiente',
+      },
+    });
+  }
+
+  async assignChef(
+    orders: PedidoEntity[],
+    id_chef: number,
+  ): Promise<PedidoEntity[]> {
+    return this.dataSource.transaction(
+      async (entityManager): Promise<PedidoEntity[]> => {
+        try {
+          for (const order of orders) {
+            order.id_chef = id_chef;
+            order.estado = 'en_preparacion';
+            await entityManager.save(order);
+          }
+          return orders;
+        } catch (e) {
+          throw e;
+        }
+      },
+    );
   }
 }

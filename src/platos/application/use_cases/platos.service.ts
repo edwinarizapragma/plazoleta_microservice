@@ -7,6 +7,7 @@ import { PlatoRepository } from '../../infrastructure/repositories/PlatoReposito
 import { CategoriaRepository } from '../../infrastructure/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../../../restaurantes/infrastructure/repositories/RestauranteRepository';
 import { listByRestaurantDto } from '../../interfaces/dto/listByRestaraunt.dto';
+import { getErrorMessages } from '../../../../util/errors/getValidationErrorMessages';
 @Injectable()
 export class PlatosService {
   constructor(
@@ -37,9 +38,7 @@ export class PlatosService {
       if (validationErrors.length) {
         throw {
           message: 'Errores de validación',
-          errors: validationErrors
-            .map((error) => Object.values(error.constraints))
-            .flat(),
+          errors: getErrorMessages(validationErrors),
         };
       }
       const errores: Array<string> = [];
@@ -76,7 +75,7 @@ export class PlatosService {
       throw new HttpException(
         {
           message: error.message ? error.message : 'Error al crear el plato',
-          error,
+          error: error.errors ? error.errors : error,
         },
         error.message && error.message === 'Errores de validación'
           ? HttpStatus.BAD_REQUEST
@@ -103,9 +102,7 @@ export class PlatosService {
       if (validationErrors.length) {
         throw {
           message: 'Errores de validación',
-          errors: validationErrors
-            .map((error) => Object.values(error.constraints))
-            .flat(),
+          errors: getErrorMessages(validationErrors),
         };
       }
       const platoToUpdate = await this.findPLatoById(id);
@@ -148,7 +145,7 @@ export class PlatosService {
           message: error.message
             ? error.message
             : 'Error al actualizar el plato',
-          error,
+          error: error.errors ? error.errors : error,
         },
         error.message && error.message === 'Errores de validación'
           ? HttpStatus.BAD_REQUEST
@@ -171,9 +168,7 @@ export class PlatosService {
       if (validation.length) {
         throw {
           message: 'Errores de validación',
-          errors: validation
-            .map((error) => Object.values(error.constraints))
-            .flat(),
+          errors: getErrorMessages(validation),
         };
       }
       const platoToUpdate = await this.findPLatoById(id);
@@ -208,7 +203,7 @@ export class PlatosService {
           message: error.message
             ? error.message
             : 'Error al actualizar el estado del plato',
-          error,
+          error: error.errors ? error.errors : error,
         },
         error.message && error.message === 'Errores de validación'
           ? HttpStatus.BAD_REQUEST
@@ -232,9 +227,7 @@ export class PlatosService {
       if (validationParams.length) {
         throw {
           message: 'Errores de validación',
-          errors: validationParams
-            .map((error) => Object.values(error.constraints))
-            .flat(),
+          errors: getErrorMessages(validationParams),
         };
       }
       const searchRestaurant =
@@ -276,7 +269,7 @@ export class PlatosService {
           message: error.message
             ? error.message
             : 'Error al crear el restaurante',
-          error,
+          error: error.errors ? error.errors : error,
         },
         error.message && error.message === 'Errores de validación'
           ? HttpStatus.BAD_REQUEST

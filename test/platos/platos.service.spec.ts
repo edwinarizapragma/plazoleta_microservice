@@ -154,7 +154,7 @@ describe('PlatosService', () => {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(6);
+        expect(error.response.error).toHaveLength(6);
       }
     });
 
@@ -174,7 +174,7 @@ describe('PlatosService', () => {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
         expect(error.response.error).toBeDefined();
-        expect(error.response.error.errors).toEqual(
+        expect(error.response.error).toEqual(
           expect.arrayContaining([
             expect.stringMatching(
               /El restaurante proporcionado no se encuentra registrado/,
@@ -315,7 +315,7 @@ describe('PlatosService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(3);
+        expect(error.response.error).toHaveLength(3);
       }
     });
 
@@ -329,7 +329,7 @@ describe('PlatosService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toEqual(
+        expect(error.response.error).toEqual(
           expect.arrayContaining([
             expect.stringMatching(
               /El restaurante proporcionado no se encuentra registrado/,
