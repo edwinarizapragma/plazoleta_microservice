@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RestaurantesService } from '../../src/restaurantes/application/restaurantes.service';
-import { createRestauranteDto } from '../../src/restaurantes/dto/createRestaurant.dto';
-import { listRestaurantDto } from '../../src/restaurantes/dto/listRestaurant.dto';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { HttpStatus } from '@nestjs/common';
-import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { AppModule } from '../../src/app.module';
-import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
+import { RestaurantesService } from '../../src/restaurantes/application/use_cases/restaurantes.service';
+import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
+import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
+import { createRestauranteDto } from '../../src/restaurantes/interfaces/dto/createRestaurant.dto';
+import { listRestaurantDto } from '../../src/restaurantes/interfaces/dto/listRestaurant.dto';
+import { HttpStatus } from '@nestjs/common';
+
 describe('RestaurantesService', () => {
   let service: RestaurantesService;
   const validClientUser = {
@@ -57,7 +58,7 @@ describe('RestaurantesService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(7);
+        expect(error.response.error).toHaveLength(7);
       }
     });
 
@@ -166,7 +167,7 @@ describe('RestaurantesService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(4);
+        expect(error.response.error).toHaveLength(4);
       }
     });
     it('test list restaurants with paginate params that return an empty list', async () => {

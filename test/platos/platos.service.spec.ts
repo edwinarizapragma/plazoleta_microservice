@@ -1,18 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PlatosService } from '../../src/platos/application/platos.service';
-import { AppModule } from '../../src/app.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppModule } from '../../src/app.module';
+import { PlatosService } from '../../src/platos/application/use_cases/platos.service';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
 import { CategoriaEntity } from '../../database/typeorm/entities/Categoria.entity';
+import { PlatoRepository } from '../../src/platos/infrastructure/repositories/PlatoRepository';
+import { CategoriaRepository } from '../../src/platos/infrastructure/repositories/CategoriaRepository';
+import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
+import { createPlatoDto } from '../../src/platos/interfaces/dto/createPlato.dto';
+import { updatePlatoDto } from '../../src/platos/interfaces/dto/updatePlato.dto';
+import { updateStatusPlatoDto } from '../../src/platos/interfaces/dto/updateStatusPlato.dto';
+import { listByRestaurantDto } from '../../src/platos/interfaces/dto/listByRestaraunt.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { createPlatoDto } from '../../src/platos/dto/createPlato.dto';
-import { updatePlatoDto } from '../../src/platos/dto/updatePlato.dto';
-import { updateStatusPlatoDto } from '../../src/platos/dto/updateStatusPlato.dto';
-import { listByRestaurantDto } from '../../src/platos/dto/listByRestaraunt.dto';
-import { PlatoRepository } from '../../src/platos/domain/repositories/PlatoRepository';
-import { CategoriaRepository } from '../../src/platos/domain/repositories/CategoriaRepository';
-import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
+
 describe('PlatosService', () => {
   let service: PlatosService;
   const validOwnerUser = {
@@ -153,7 +154,7 @@ describe('PlatosService', () => {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(6);
+        expect(error.response.error).toHaveLength(6);
       }
     });
 
@@ -173,7 +174,7 @@ describe('PlatosService', () => {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
         expect(error.response.error).toBeDefined();
-        expect(error.response.error.errors).toEqual(
+        expect(error.response.error).toEqual(
           expect.arrayContaining([
             expect.stringMatching(
               /El restaurante proporcionado no se encuentra registrado/,
@@ -314,7 +315,7 @@ describe('PlatosService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toHaveLength(3);
+        expect(error.response.error).toHaveLength(3);
       }
     });
 
@@ -328,7 +329,7 @@ describe('PlatosService', () => {
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);
         expect(error.message).toBe('Errores de validación');
-        expect(error.response.error.errors).toEqual(
+        expect(error.response.error).toEqual(
           expect.arrayContaining([
             expect.stringMatching(
               /El restaurante proporcionado no se encuentra registrado/,

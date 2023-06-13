@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { EmpleadosRestaurantesService } from '../../src/empleados_restaurantes/applications/empleados_restaurantes.service';
 import { AppModule } from '../../src/app.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmpleadosRestaurantesService } from '../../src/empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
+import { UsuariosMicroserviceService } from '../../src/empleados_restaurantes/infrastructure/axios/usuarios_micro.service';
 import { EmpleadoRestauranteEntity } from '../../database/typeorm/entities/EmpeladoRestaurante.entity';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
-import { EmpleadosRestaurantesRepository } from '../../src/empleados_restaurantes/domain/repositories/EmpleadoRestauranteRepository';
-import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
-import { CreateEmpleadoRestauranteDto } from '../../src/empleados_restaurantes/dto/CreateEmpleadoRestaurante.dto';
+import { EmpleadosRestaurantesRepository } from '../../src/empleados_restaurantes/infrastructure/repositories/EmpleadoRestauranteRepository';
+import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
+import { CreateEmpleadoRestauranteDto } from '../../src/empleados_restaurantes/interfaces/dto/CreateEmpleadoRestaurante.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import axios from 'axios';
 import * as dotenv from 'dotenv';
-import { UsuariosMicroserviceService } from '../../src/empleados_restaurantes/domain/infrastructure/axios/usuarios_micro.service';
 dotenv.config();
 
 describe('EmpleadosRestaurantesService', () => {
