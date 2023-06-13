@@ -1,18 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PlatosService } from '../../src/platos/application/platos.service';
-import { AppModule } from '../../src/app.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppModule } from '../../src/app.module';
+import { PlatosService } from '../../src/platos/application/use_cases/platos.service';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
 import { CategoriaEntity } from '../../database/typeorm/entities/Categoria.entity';
+import { PlatoRepository } from '../../src/platos/infrastructure/repositories/PlatoRepository';
+import { CategoriaRepository } from '../../src/platos/infrastructure/repositories/CategoriaRepository';
+import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
+import { createPlatoDto } from '../../src/platos/interfaces/dto/createPlato.dto';
+import { updatePlatoDto } from '../../src/platos/interfaces/dto/updatePlato.dto';
+import { updateStatusPlatoDto } from '../../src/platos/interfaces/dto/updateStatusPlato.dto';
+import { listByRestaurantDto } from '../../src/platos/interfaces/dto/listByRestaraunt.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { createPlatoDto } from '../../src/platos/dto/createPlato.dto';
-import { updatePlatoDto } from '../../src/platos/dto/updatePlato.dto';
-import { updateStatusPlatoDto } from '../../src/platos/dto/updateStatusPlato.dto';
-import { listByRestaurantDto } from '../../src/platos/dto/listByRestaraunt.dto';
-import { PlatoRepository } from '../../src/platos/domain/repositories/PlatoRepository';
-import { CategoriaRepository } from '../../src/platos/domain/repositories/CategoriaRepository';
-import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
+
 describe('PlatosService', () => {
   let service: PlatosService;
   const validOwnerUser = {

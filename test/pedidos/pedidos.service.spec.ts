@@ -1,24 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PedidosService } from '../../src/pedidos/application/pedidos.service';
-import { PedidoRepository } from '../../src/pedidos/domain/repositories/PedidoRepository';
-import { RestauranteRepository } from '../../src/restaurantes/domain/repositories/RestauranteRepository';
-import { PedidosPlatosRepository } from '../../src/pedidos/domain/repositories/PedidosPlatosRepository';
-import { PlatoRepository } from '../../src/platos/domain/repositories/PlatoRepository';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppModule } from '../../src/app.module';
+import { PedidosService } from '../../src/pedidos/application/use_cases/pedidos.service';
+import { EmpleadosRestaurantesService } from '../../src/empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
+import { UsuariosMicroserviceService } from '../../src/empleados_restaurantes/infrastructure/axios/usuarios_micro.service';
+import { PedidoEntity } from '../../database/typeorm/entities/Pedido.entity';
+import { PedidoPLatoEntity } from '../../database/typeorm/entities/PedidoPlato.entity';
+import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
+import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
+import { PedidoRepository } from '../../src/pedidos/infrastructure/repositories/PedidoRepository';
+import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
+import { PedidosPlatosRepository } from '../../src/pedidos/infrastructure/repositories/PedidosPlatosRepository';
+import { PlatoRepository } from '../../src/platos/infrastructure/repositories/PlatoRepository';
+import { EmpleadosRestaurantesRepository } from '../../src/empleados_restaurantes/infrastructure/repositories/EmpleadoRestauranteRepository';
 import {
   createPedidoDto,
   PlatoListDto,
-} from '../../src/pedidos/dto/createPedido.dto';
+} from '../../src/pedidos/interfaces/dto/createPedido.dto';
+import { listPedidosDto } from '../../src/pedidos/interfaces/dto/listPedidos.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { AppModule } from '../../src/app.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { PedidoEntity } from '../../database/typeorm/entities/Pedido.entity';
-import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
-import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
-import { PedidoPLatoEntity } from '../../database/typeorm/entities/PedidoPlato.entity';
-import { listPedidosDto } from '../../src/pedidos/dto/listPedidos.dto';
-import { EmpleadosRestaurantesService } from '../../src/empleados_restaurantes/applications/empleados_restaurantes.service';
-import { EmpleadosRestaurantesRepository } from '../../src/empleados_restaurantes/domain/repositories/EmpleadoRestauranteRepository';
-import { UsuariosMicroserviceService } from '../../src/empleados_restaurantes/domain/infrastructure/axios/usuarios_micro.service';
+
 describe('PedidosService', () => {
   let service: PedidosService;
   const usuarioClienteValido = {
