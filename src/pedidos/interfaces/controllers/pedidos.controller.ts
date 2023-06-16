@@ -153,11 +153,34 @@ export class PedidosController {
     type: 'number',
     example: 1,
   })
-  async update(
+  async orderDelivery(
     @Param('id') id: number,
     @Body() body: orderDeliveryDto,
     @Query('usuario') usuario,
   ) {
     return this.pedidoService.orderDelivery(id, body, usuario);
+  }
+
+  @Patch('/cancel-order/:id')
+  @ApiOperation({ summary: 'Cambiar estado a cancelado un pedido' })
+  @ApiResponse({
+    status: 202,
+    description: 'Pedido cancelado con éxito',
+  })
+  @ApiResponse({ status: 400, description: 'Error de validación de campos' })
+  @ApiResponse({
+    status: 403,
+    description: 'No posee permisos para modificar pedido',
+  })
+  @ApiResponse({ status: 500, description: 'Error interno del servidor' })
+  @ApiParam({
+    name: 'id',
+    description: 'id del pedido ',
+    required: true,
+    type: 'number',
+    example: 1,
+  })
+  async cancelOrder(@Param('id') id: number, @Query('usuario') usuario) {
+    return this.pedidoService.cancelOrder(id, usuario);
   }
 }
