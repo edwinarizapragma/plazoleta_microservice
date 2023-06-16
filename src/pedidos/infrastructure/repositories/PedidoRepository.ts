@@ -99,4 +99,9 @@ export class PedidoRepository extends Repository<PedidoEntity> {
     pedido.estado = 'entregado';
     return this.save(pedido);
   }
+
+  async updateStateCancelledOrder(pedido: PedidoEntity): Promise<PedidoEntity> {
+    pedido.estado = 'cancelado';
+    return this.save(pedido);
+  }
 }

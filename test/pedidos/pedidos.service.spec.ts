@@ -455,4 +455,71 @@ describe('PedidosService', () => {
       }
     });
   });
+
+  describe('OrderCancelFunction', () => {
+    it('test cancel order that does not belong to the customer', async () => {
+      try {
+        await service.cancelOrder(5, usuarioClienteValido2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /El pedido que desea cancelar no fue solicitado por usted/,
+            ),
+          ]),
+        );
+      }
+    });
+
+    it('test cancel order with valid input', async () => {
+      const result = await service.cancelOrder(5, usuarioClienteValido);
+      expect(result).toEqual({
+        message: 'Pedido cancelado exitosamente',
+      });
+    });
+
+    it('test cancel order with employee profile', async () => {
+      try {
+        await service.cancelOrder(5, usuarioEmpleado);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.FORBIDDEN);
+        expect(error.message).toBe(
+          'No tiene permisos para realizar esta acción',
+        );
+      }
+    });
+
+    it('test cancel order with order doesnt exists', async () => {
+      try {
+        await service.cancelOrder(-1, usuarioClienteValido);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/El pedido no existe/),
+          ]),
+        );
+      }
+    });
+
+    it('test cancel order delivery with different status', async () => {
+      try {
+        await service.cancelOrder(5, usuarioClienteValido);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /Lo sentimos, tu pedido ya está en preparación y no puede cancelarse/,
+            ),
+          ]),
+        );
+      }
+    });
+  });
 });

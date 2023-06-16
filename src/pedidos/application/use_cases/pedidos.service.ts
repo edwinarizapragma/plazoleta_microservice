@@ -392,4 +392,50 @@ export class PedidosService {
       );
     }
   }
+
+  async cancelOrder(id, usuario): Promise<{ message: string } | HttpException> {
+    if (usuario.nombreRol !== 'Cliente') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para realizar esta acción',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    try {
+      const pedidoInfo = await this.pedidoRepository.getPedidoById(id);
+      if (!pedidoInfo) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El pedido no existe'],
+        };
+      }
+      if (pedidoInfo.estado !== 'pendiente') {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            'Lo sentimos, tu pedido ya está en preparación y no puede cancelarse',
+          ],
+        };
+      }
+      if (pedidoInfo.id_cliente !== usuario.id) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El pedido que desea cancelar no fue solicitado por usted '],
+        };
+      }
+      await this.pedidoRepository.updateStateCancelledOrder(pedidoInfo);
+      return { message: 'Pedido cancelado exitosamente' };
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message ? error.message : 'Error al crear el pedido',
+          error: error.errors ? error.errors : error,
+        },
+        error.message && error.message === 'Errores de validación'
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
