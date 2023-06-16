@@ -4,6 +4,7 @@ import { AppModule } from '../../src/app.module';
 import { PedidosService } from '../../src/pedidos/application/use_cases/pedidos.service';
 import { EmpleadosRestaurantesService } from '../../src/empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
 import { UsuariosMicroserviceService } from '../../src/empleados_restaurantes/infrastructure/axios/usuarios_micro.service';
+import { MensajeriaMicroServiceService } from '../../src/pedidos/infrastructure/axios/mensajeria-micro.service';
 import { PedidoEntity } from '../../database/typeorm/entities/Pedido.entity';
 import { PedidoPLatoEntity } from '../../database/typeorm/entities/PedidoPlato.entity';
 import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
@@ -20,6 +21,7 @@ import {
 import { listPedidosDto } from '../../src/pedidos/interfaces/dto/listPedidos.dto';
 import { takeOrderDto } from '../../src/pedidos/interfaces/dto/takeOrderDto.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import { orderDeliveryDto } from '../../src/pedidos/interfaces/dto/orderDelivery.dto';
 
 describe('PedidosService', () => {
   let service: PedidosService;
@@ -28,7 +30,7 @@ describe('PedidosService', () => {
     nombre: 'Sarah',
     apellido: 'Smith',
     numero_documento: 31578902,
-    celular: '+573215487632',
+    celular: '+573155680091',
     correo: 'sarahsmith@example.com',
     id_rol: 4,
     nombreRol: 'Cliente',
@@ -38,7 +40,7 @@ describe('PedidosService', () => {
     nombre: 'Jordan',
     apellido: 'Jr',
     numero_documento: 1444521001,
-    celular: '+573215487521',
+    celular: '+573155680091',
     correo: 'cliente@cliente.com',
     id_rol: 4,
     nombreRol: 'Cliente',
@@ -49,7 +51,7 @@ describe('PedidosService', () => {
     nombre: 'Dave Jhon',
     apellido: 'Smith',
     numero_documento: 45661234,
-    celular: '+573156487925',
+    celular: '+573155680091',
     correo: 'empleado@empleado.com',
     id_rol: 3,
     nombreRol: 'Empleado',
@@ -60,7 +62,7 @@ describe('PedidosService', () => {
     nombre: 'Edwin',
     apellido: 'Ariza',
     numero_documento: 1235678,
-    celular: '+573156487925',
+    celular: '+573155680091',
     correo: 'edwina@gmail.com',
     id_rol: 3,
     nombreRol: 'Empleado',
@@ -71,7 +73,7 @@ describe('PedidosService', () => {
     nombre: 'Jorge',
     apellido: 'Puentes',
     numero_documento: 456789,
-    celular: '+573156487944',
+    celular: '+573155680091',
     correo: 'jorge@jorge.com',
     id_rol: 3,
     nombreRol: 'Empleado',
@@ -96,6 +98,7 @@ describe('PedidosService', () => {
         EmpleadosRestaurantesService,
         EmpleadosRestaurantesRepository,
         UsuariosMicroserviceService,
+        MensajeriaMicroServiceService,
       ],
     }).compile();
 
@@ -289,6 +292,163 @@ describe('PedidosService', () => {
           expect.arrayContaining([
             expect.stringMatching(
               /Algunos pedidos no pertenecen al restaurante que posee el empleado o ya se encuentran en preparación o cancelados/,
+            ),
+          ]),
+        );
+      }
+    });
+  });
+
+  describe('OrderReadyFunction', () => {
+    it('test order ready with valid input', async () => {
+      const result = await service.orderReady(2, usuarioEmpleado2);
+      expect(result).toEqual({
+        message:
+          'Pedido marcado como listo y se ha notificado al cliente para recibirlo',
+      });
+    });
+
+    it('test order ready with customer profile ', async () => {
+      try {
+        await service.orderReady(2, usuarioClienteValido);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.FORBIDDEN);
+        expect(error.message).toBe(
+          'No tiene permisos para realizar esta acción',
+        );
+      }
+    });
+
+    it('test order ready with order doesnt exists', async () => {
+      try {
+        await service.orderReady(-1, usuarioEmpleado2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/El pedido no existe/),
+          ]),
+        );
+      }
+    });
+
+    it('test mark order ready with different status', async () => {
+      try {
+        await service.orderReady(2, usuarioEmpleado2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /No es posible marcar como listo el pedido ya que no se encuentra en preparación/,
+            ),
+          ]),
+        );
+      }
+    });
+
+    it('test mark order ready with employee who does not belong to the restaurant of the order', async () => {
+      try {
+        await service.orderReady(3, usuarioEmpleado2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /El empleado no pertenece al restaurante del cual proviene el pedido/,
+            ),
+          ]),
+        );
+      }
+    });
+  });
+
+  describe('OrderDeliveryFunction', () => {
+    it('test order delivery with valid input', async () => {
+      const body = new orderDeliveryDto();
+      body.codigo = 'P-6267';
+      const result = await service.orderDelivery(2, body, usuarioEmpleado2);
+      expect(result).toEqual({
+        message: 'Pedido entregado exitosamente',
+      });
+    });
+    it('test order delivery with validation errors', async () => {
+      const body = new orderDeliveryDto();
+      body.codigo = null;
+      try {
+        await service.orderDelivery(2, body, usuarioEmpleado2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.message).toBe('Errores de validación');
+        expect(error.response.error).toHaveLength(2);
+      }
+    });
+
+    it('test order delivery with customer profile ', async () => {
+      try {
+        const body = new orderDeliveryDto();
+        body.codigo = 'P-6267';
+        await service.orderDelivery(2, body, usuarioClienteValido);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.FORBIDDEN);
+        expect(error.message).toBe(
+          'No tiene permisos para realizar esta acción',
+        );
+      }
+    });
+
+    it('test order delivery with order doesnt exists', async () => {
+      try {
+        const body = new orderDeliveryDto();
+        body.codigo = 'P-6267';
+        await service.orderDelivery(-1, body, usuarioEmpleado2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/El pedido no existe/),
+          ]),
+        );
+      }
+    });
+
+    it('test mark order delivery with different status', async () => {
+      try {
+        const body = new orderDeliveryDto();
+        body.codigo = 'P-6267';
+        await service.orderDelivery(2, body, usuarioEmpleado2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /No es posible marcar como entregado el pedido ya que no se encuentra listo/,
+            ),
+          ]),
+        );
+      }
+    });
+
+    it('test mark order delivered with employee who does not belong to the restaurant of the order', async () => {
+      try {
+        const body = new orderDeliveryDto();
+        body.codigo = 'P-4050';
+        await service.orderDelivery(3, body, usuarioEmpleado2);
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpException);
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response.error).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(
+              /El empleado no pertenece al restaurante del cual proviene el pedido/,
             ),
           ]),
         );

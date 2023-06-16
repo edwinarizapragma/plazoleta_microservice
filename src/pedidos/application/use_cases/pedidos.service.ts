@@ -9,6 +9,9 @@ import { validate } from 'class-validator';
 import { getErrorMessages } from '../../../../util/errors/getValidationErrorMessages';
 import { EmpleadosRestaurantesService } from '../../../empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
 import { takeOrderDto } from '../../interfaces/dto/takeOrderDto.dto';
+import { getDataUserById } from '../../../../util/finders/findUserById';
+import { MensajeriaMicroServiceService } from '../../infrastructure/axios/mensajeria-micro.service';
+import { orderDeliveryDto } from '../../interfaces/dto/orderDelivery.dto';
 @Injectable()
 export class PedidosService {
   constructor(
@@ -16,6 +19,7 @@ export class PedidosService {
     private restauranteRepository: RestauranteRepository,
     private platoRepository: PlatoRepository,
     private empleadoRestauranteService: EmpleadosRestaurantesService,
+    private mensajeriaService: MensajeriaMicroServiceService,
   ) {}
   async createPedido(pedidoDetail: createPedidoDto, usuario) {
     if (usuario.nombreRol !== 'Cliente') {
@@ -233,6 +237,149 @@ export class PedidosService {
       return {
         message: `Se ha asignado ${body.pedidos.length} pedido(s) a ${usuario.nombre} ${usuario.apellido}`,
       };
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message ? error.message : 'Error al crear el pedido',
+          error: error.errors ? error.errors : error,
+        },
+        error.message && error.message === 'Errores de validación'
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async orderReady(id, usuario): Promise<{ message: string } | HttpException> {
+    if (usuario.nombreRol !== 'Empleado') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para realizar esta acción',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    try {
+      const restauranteEmployee = await this.employeeHasRestaurant(usuario);
+      if (!restauranteEmployee) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El empleado no pertenece a ningún restaurante'],
+        };
+      }
+      const pedidoInfo = await this.pedidoRepository.getPedidoById(id);
+      if (!pedidoInfo) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El pedido no existe'],
+        };
+      }
+      if (pedidoInfo.estado !== 'en_preparacion') {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            'No es posible marcar como listo el pedido ya que no se encuentra en preparación',
+          ],
+        };
+      }
+      if (pedidoInfo.id_restaurante !== restauranteEmployee.id_restaurante) {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            'El empleado no pertenece al restaurante del cual proviene el pedido',
+          ],
+        };
+      }
+      const clienteInfo = await getDataUserById(pedidoInfo.id_cliente);
+      if (!clienteInfo) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El cliente asociado al pedido no existe'],
+        };
+      }
+      const SMSInfo = await this.mensajeriaService
+        .sendSMSOrderNotification(clienteInfo.celular)
+        .catch((e) => {
+          throw e;
+        });
+
+      await this.pedidoRepository.updateReadyOrder(pedidoInfo, SMSInfo.code);
+      return {
+        message:
+          'Pedido marcado como listo y se ha notificado al cliente para recibirlo',
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: error.message ? error.message : 'Error al crear el pedido',
+          error: error.errors ? error.errors : error,
+        },
+        error.message && error.message === 'Errores de validación'
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async orderDelivery(
+    id,
+    body: orderDeliveryDto,
+    usuario,
+  ): Promise<{ message: string } | HttpException> {
+    if (usuario.nombreRol !== 'Empleado') {
+      throw new HttpException(
+        {
+          message: 'No tiene permisos para realizar esta acción',
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    try {
+      const validateBody = await validate(body);
+      if (validateBody.length) {
+        throw {
+          message: 'Errores de validación',
+          errors: getErrorMessages(validateBody),
+        };
+      }
+      const restauranteEmployee = await this.employeeHasRestaurant(usuario);
+      if (!restauranteEmployee) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El empleado no pertenece a ningún restaurante'],
+        };
+      }
+      const pedidoInfo = await this.pedidoRepository.getPedidoById(id);
+      if (!pedidoInfo) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El pedido no existe'],
+        };
+      }
+      if (pedidoInfo.estado !== 'listo') {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            'No es posible marcar como entregado el pedido ya que no se encuentra listo',
+          ],
+        };
+      }
+      if (pedidoInfo.id_restaurante !== restauranteEmployee.id_restaurante) {
+        throw {
+          message: 'Errores de validación',
+          errors: [
+            'El empleado no pertenece al restaurante del cual proviene el pedido',
+          ],
+        };
+      }
+      if (pedidoInfo.codigo_verificacion !== body.codigo) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El código proporcionado es invalido'],
+        };
+      }
+      await this.pedidoRepository.updateStateDeliveryOrder(pedidoInfo);
+      return { message: 'Pedido entregado exitosamente' };
     } catch (error) {
       throw new HttpException(
         {

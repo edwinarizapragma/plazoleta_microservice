@@ -81,4 +81,22 @@ export class PedidoRepository extends Repository<PedidoEntity> {
       },
     );
   }
+
+  async getPedidoById(id: number): Promise<PedidoEntity> {
+    return this.findOneBy({ id });
+  }
+
+  async updateReadyOrder(
+    pedido: PedidoEntity,
+    codigo: string,
+  ): Promise<PedidoEntity> {
+    pedido.estado = 'listo';
+    pedido.codigo_verificacion = codigo;
+    return await this.save(pedido);
+  }
+
+  async updateStateDeliveryOrder(pedido: PedidoEntity): Promise<PedidoEntity> {
+    pedido.estado = 'entregado';
+    return this.save(pedido);
+  }
 }
