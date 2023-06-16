@@ -14,6 +14,7 @@ import { EmpleadosRestaurantesRepository } from '../empleados_restaurantes/infra
 import { UsuariosMicroserviceService } from '../empleados_restaurantes/infrastructure/axios/usuarios_micro.service';
 import { EmpleadoRestauranteEntity } from '../../database/typeorm/entities/EmpeladoRestaurante.entity';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
+import { MensajeriaMicroServiceService } from './infrastructure/axios/mensajeria-micro.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -33,6 +34,7 @@ import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.e
     EmpleadosRestaurantesService,
     EmpleadosRestaurantesRepository,
     UsuariosMicroserviceService,
+    MensajeriaMicroServiceService,
   ],
 })
 export class PedidosModule {
