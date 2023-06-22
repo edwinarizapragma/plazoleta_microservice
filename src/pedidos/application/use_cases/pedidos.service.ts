@@ -2,26 +2,34 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { createPedidoDto } from '../../interfaces/dto/createPedido.dto';
 import { listPedidosDto } from '../../interfaces/dto/listPedidos.dto';
 import { PedidoRepository } from '../../infrastructure/repositories/PedidoRepository';
-import { RestauranteRepository } from '../../../restaurantes/infrastructure/repositories/RestauranteRepository';
 import * as dayjs from 'dayjs';
 import { PlatoRepository } from '../../../platos/infrastructure/repositories/PlatoRepository';
 import { validate } from 'class-validator';
 import { getErrorMessages } from '../../../../util/errors/getValidationErrorMessages';
 import { EmpleadosRestaurantesService } from '../../../empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
 import { takeOrderDto } from '../../interfaces/dto/takeOrderDto.dto';
-import { getDataUserById } from '../../../../util/finders/findUserById';
+import { UserMicroService } from '../../../../util/finders/findUserById';
 import { MensajeriaMicroServiceService } from '../../infrastructure/axios/mensajeria-micro.service';
 import { orderDeliveryDto } from '../../interfaces/dto/orderDelivery.dto';
+import { RestaurantesService } from '../../../restaurantes/application/use_cases/restaurantes.service';
 @Injectable()
 export class PedidosService {
   constructor(
+    private restauranteService: RestaurantesService,
     private pedidoRepository: PedidoRepository,
-    private restauranteRepository: RestauranteRepository,
     private platoRepository: PlatoRepository,
     private empleadoRestauranteService: EmpleadosRestaurantesService,
     private mensajeriaService: MensajeriaMicroServiceService,
+    private userMicroService: UserMicroService,
   ) {}
-  async createPedido(pedidoDetail: createPedidoDto, usuario) {
+
+  async getRestaurantById(id: number): Promise<any> {
+    return this.restauranteService.findRestaurant(id);
+  }
+  async createPedido(
+    pedidoDetail: createPedidoDto,
+    usuario,
+  ): Promise<{ message: string } | HttpException> {
     if (usuario.nombreRol !== 'Cliente') {
       throw new HttpException(
         {
@@ -38,10 +46,9 @@ export class PedidosService {
           errors: getErrorMessages(validationPedidoDetail),
         };
       }
-      const searchRestaurante =
-        await this.restauranteRepository.findRestaurantById(
-          pedidoDetail.id_restaurante,
-        );
+      const searchRestaurante = await this.getRestaurantById(
+        pedidoDetail.id_restaurante,
+      );
       const errores: Array<string> = [];
       if ([null, undefined].includes(searchRestaurante)) {
         errores.push('El restaurante proporcionado no se encuentra registrado');
@@ -76,7 +83,6 @@ export class PedidosService {
             .join(', ')} no pertenecen al restaurante seleccionado`,
         );
       }
-
       if (errores.length) {
         throw {
           message: 'Errores de validación',
@@ -116,16 +122,11 @@ export class PedidosService {
     }
   }
 
-  async employeeHasRestaurant(usuario) {
+  async employeeHasRestaurant(usuario): Promise<any> {
     const employeeRestaurant =
       await this.empleadoRestauranteService.findByEmployee(usuario.id);
     if (!employeeRestaurant) {
-      throw {
-        message: 'Errores de validación',
-        errors: [
-          `El usuario ${usuario.nombre} ${usuario.apellido} no pertenece a ningún restaurante`,
-        ],
-      };
+      return false;
     }
     return employeeRestaurant;
   }
@@ -149,6 +150,12 @@ export class PedidosService {
       const searchEmployeeRestaurant = await this.employeeHasRestaurant(
         usuario,
       );
+      if (!searchEmployeeRestaurant) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El empleado no pertenece a ningún restaurante'],
+        };
+      }
       const options = {
         relations: {
           pedidos_platos: {
@@ -217,6 +224,12 @@ export class PedidosService {
       const searchEmployeeRestaurant = await this.employeeHasRestaurant(
         usuario,
       );
+      if (!searchEmployeeRestaurant) {
+        throw {
+          message: 'Errores de validación',
+          errors: ['El empleado no pertenece a ningún restaurante'],
+        };
+      }
       const ordersData = await this.pedidoRepository.getPedidosById(
         body.pedidos,
         searchEmployeeRestaurant.id_restaurante,
@@ -290,7 +303,9 @@ export class PedidosService {
           ],
         };
       }
-      const clienteInfo = await getDataUserById(pedidoInfo.id_cliente);
+      const clienteInfo = await this.userMicroService.getDataUserById(
+        pedidoInfo.id_cliente,
+      );
       if (!clienteInfo) {
         throw {
           message: 'Errores de validación',

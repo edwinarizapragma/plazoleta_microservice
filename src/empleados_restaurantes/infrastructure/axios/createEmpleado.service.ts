@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { axiosErrorHandler } from '../../../../util/errors/axiosErrorsHandler';
 @Injectable()
-export class UsuariosMicroserviceService {
+export class CreateEmpleadoService {
   async createEmployee(employeeData, token) {
     const url = `${process.env.URL_USUARIOS_MICROSERVICE}/usuarios/create`;
     return await axios

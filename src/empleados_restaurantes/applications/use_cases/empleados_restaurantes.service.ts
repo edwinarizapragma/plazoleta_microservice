@@ -2,16 +2,20 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { getErrorMessages } from '../../../../util/errors/getValidationErrorMessages';
 import { CreateEmpleadoRestauranteDto } from '../../interfaces/dto/CreateEmpleadoRestaurante.dto';
-import { RestauranteRepository } from '../../../restaurantes/infrastructure/repositories/RestauranteRepository';
 import { EmpleadosRestaurantesRepository } from '../../infrastructure/repositories/EmpleadoRestauranteRepository';
-import { UsuariosMicroserviceService } from '../../infrastructure/axios/usuarios_micro.service';
+import { CreateEmpleadoService } from '../../infrastructure/axios/createEmpleado.service';
+import { RestaurantesService } from '../../../restaurantes/application/use_cases/restaurantes.service';
 @Injectable()
 export class EmpleadosRestaurantesService {
   constructor(
-    private restauranteRepository: RestauranteRepository,
+    private restauranteService: RestaurantesService,
     private empleadoRestauranteRepository: EmpleadosRestaurantesRepository,
-    private usuariosMicroService: UsuariosMicroserviceService,
+    private createEmpleadoService: CreateEmpleadoService,
   ) {}
+
+  async getRestaurantById(id: number): Promise<any> {
+    return this.restauranteService.findRestaurant(id);
+  }
   async create(fieldsToCreate: CreateEmpleadoRestauranteDto, token, usuario) {
     if (usuario.nombreRol !== 'Propietario') {
       throw new HttpException(
@@ -31,10 +35,9 @@ export class EmpleadosRestaurantesService {
       }
       const errores: Array<string> = [];
 
-      const searchRestaurant =
-        await this.restauranteRepository.findRestaurantById(
-          fieldsToCreate.id_restaurante,
-        );
+      const searchRestaurant = await this.getRestaurantById(
+        fieldsToCreate.id_restaurante,
+      );
       if ([null, undefined].includes(searchRestaurant)) {
         errores.push('El restaurante proporcionado no se encuentra registrado');
       }
@@ -59,7 +62,7 @@ export class EmpleadosRestaurantesService {
         clave: fieldsToCreate.clave,
         tipo: 'Empleado',
       };
-      const employeeCreated = await this.usuariosMicroService.createEmployee(
+      const employeeCreated = await this.createEmpleadoService.createEmployee(
         userEmployee,
         token,
       );
@@ -75,7 +78,6 @@ export class EmpleadosRestaurantesService {
         message: `${userEmployee.nombre} ${userEmployee.apellido} ha sido registrado y asociado al restaurante exitosamente`,
       };
     } catch (error) {
-      console.log('ENTRO');
       throw new HttpException(
         {
           message: error.message
@@ -89,8 +91,10 @@ export class EmpleadosRestaurantesService {
       );
     }
   }
-
-  async findByEmployee(id: number) {
+  async findDataEmployeeId(id: number) {
+    return this.empleadoRestauranteRepository.findByEmployeeId(id);
+  }
+  async findByEmployee(id: number): Promise<any> {
     if (!id) {
       throw new HttpException(
         {
@@ -99,9 +103,7 @@ export class EmpleadosRestaurantesService {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const record = await this.empleadoRestauranteRepository.findByEmployeeId(
-      id,
-    );
+    const record = await this.findDataEmployeeId(id);
     if ([null, undefined].includes(record)) {
       throw new HttpException(
         {

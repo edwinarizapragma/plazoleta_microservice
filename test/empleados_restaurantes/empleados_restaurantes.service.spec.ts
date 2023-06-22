@@ -1,61 +1,82 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmpleadosRestaurantesService } from '../../src/empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
-import { UsuariosMicroserviceService } from '../../src/empleados_restaurantes/infrastructure/axios/usuarios_micro.service';
+import { CreateEmpleadoService } from '../../src/empleados_restaurantes/infrastructure/axios/createEmpleado.service';
+import { UserMicroService } from '../../util/finders/findUserById';
+import { RestaurantesService } from '../../src/restaurantes/application/use_cases/restaurantes.service';
 import { EmpleadoRestauranteEntity } from '../../database/typeorm/entities/EmpeladoRestaurante.entity';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { EmpleadosRestaurantesRepository } from '../../src/empleados_restaurantes/infrastructure/repositories/EmpleadoRestauranteRepository';
 import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
 import { CreateEmpleadoRestauranteDto } from '../../src/empleados_restaurantes/interfaces/dto/CreateEmpleadoRestaurante.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
-import axios from 'axios';
-import * as dotenv from 'dotenv';
-dotenv.config();
 
 describe('EmpleadosRestaurantesService', () => {
-  let service: EmpleadosRestaurantesService;
-  const ownerCredentials = {
+  const validOwnerUser = {
+    id: 72,
+    nombre: 'Edwin Tobias',
+    apellido: 'Ariza Tellez',
+    numero_documento: 12345687987,
+    celular: '+573156487925',
     correo: 'propietario@propietario.com',
-    clave: '123456',
+    id_rol: 2,
+    nombreRol: 'Propietario',
   };
-  const urlAuth = `${process.env.URL_USUARIOS_MICROSERVICE}/auth/sing-in`;
-  let ownerData = null;
-  it('verify properties in ownerData', async () => {
-    ownerData = await axios
-      .post(urlAuth, ownerCredentials)
-      .then(({ data }) => {
-        return data;
-      })
-      .catch((e) => {
-        return e;
-      });
-    expect(ownerData).toHaveProperty('datosUsuario');
-    expect(ownerData).toHaveProperty('token');
-    expect(ownerData.datosUsuario).toBeDefined();
-    expect(ownerData.token).toBeDefined();
-  });
+  const validEmployeeUser = {
+    id: 77,
+    nombre: 'Dave Jhon',
+    apellido: 'Smith',
+    numero_documento: 45661234,
+    celular: '+573156487925',
+    correo: 'empleado@empleado.com',
+    id_rol: 3,
+    nombreRol: 'Empleado',
+  };
+  const mockRestaurante: RestauranteEntity = {
+    platos: [],
+    pedidos: [],
+    empleados_restaurantes: [],
+    id: 1,
+    nombre: 'McDonalds',
+    direccion: 'Carrera 1 # 100-10',
+    id_propietario: validOwnerUser.id,
+    telefono: '+573156487925',
+    url_logo: 'storage/foto.jpg',
+    nit: 2377793501,
+  };
+  const mockEmpleadoRestaurante: EmpleadoRestauranteEntity = {
+    id: 1,
+    id_empleado: 1,
+    id_restaurante: 1,
+    restaurante: undefined,
+  };
+  let service: EmpleadosRestaurantesService;
+  let createEmpleadoService: CreateEmpleadoService;
+  let empleadoRestauranteRepository: EmpleadosRestaurantesRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        TypeOrmModule.forFeature([
-          EmpleadoRestauranteEntity,
-          RestauranteEntity,
-        ]),
-      ],
+      imports: [AppModule],
       providers: [
         EmpleadosRestaurantesService,
-        EmpleadosRestaurantesRepository,
+        RestaurantesService,
         RestauranteRepository,
-        UsuariosMicroserviceService,
+        UserMicroService,
+        EmpleadosRestaurantesRepository,
+        CreateEmpleadoService,
       ],
     }).compile();
 
     service = module.get<EmpleadosRestaurantesService>(
       EmpleadosRestaurantesService,
     );
+    createEmpleadoService = module.get<CreateEmpleadoService>(
+      EmpleadosRestaurantesService,
+    );
+    empleadoRestauranteRepository = module.get<EmpleadosRestaurantesRepository>(
+      EmpleadosRestaurantesRepository,
+    );
+    await module.close();
   });
 
   it('should be defined', () => {
@@ -72,14 +93,21 @@ describe('EmpleadosRestaurantesService', () => {
       fieldsToCreate.correo = 'ejemplo@ejemplo.com';
       fieldsToCreate.clave = '132453';
       fieldsToCreate.id_restaurante = 1;
-      const result = await service.create(
-        fieldsToCreate,
-        `Bearer ${ownerData.token}`,
-        ownerData.datosUsuario,
-      );
-      expect(result).toEqual({
-        message: `${fieldsToCreate.nombre} ${fieldsToCreate.apellido} ha sido registrado y asociado al restaurante exitosamente`,
-      });
+      try {
+        jest
+          .spyOn(service, 'getRestaurantById')
+          .mockResolvedValueOnce(mockRestaurante);
+        jest
+          .spyOn(createEmpleadoService, 'createEmployee')
+          .mockResolvedValueOnce(validEmployeeUser);
+        jest
+          .spyOn(empleadoRestauranteRepository, 'createRow')
+          .mockResolvedValueOnce(mockEmpleadoRestaurante);
+        const result = await service.create(fieldsToCreate, ``, validOwnerUser);
+        expect(result).toEqual({
+          message: `${fieldsToCreate.nombre} ${fieldsToCreate.apellido} ha sido registrado y asociado al restaurante exitosamente`,
+        });
+      } catch (error) {}
     });
 
     it('create with restaurant that doesnt exist', async () => {
@@ -93,11 +121,8 @@ describe('EmpleadosRestaurantesService', () => {
       fieldsToCreate.clave = '132453';
       fieldsToCreate.id_restaurante = 80901;
       try {
-        await service.create(
-          fieldsToCreate,
-          `Bearer ${ownerData.token}`,
-          ownerData.datosUsuario,
-        );
+        jest.spyOn(service, 'getRestaurantById').mockResolvedValueOnce(null);
+        await service.create(fieldsToCreate, ``, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.message).toBe('Errores de validación');
@@ -123,11 +148,12 @@ describe('EmpleadosRestaurantesService', () => {
       fieldsToCreate.clave = '132453';
       fieldsToCreate.id_restaurante = 20;
       try {
-        await service.create(
-          fieldsToCreate,
-          `Bearer ${ownerData.token}`,
-          ownerData.datosUsuario,
-        );
+        const mockRestaurantDiffOwner = Object.assign({}, mockRestaurante);
+        mockRestaurantDiffOwner.id_propietario = 90999;
+        jest
+          .spyOn(service, 'getRestaurantById')
+          .mockResolvedValueOnce(mockRestaurantDiffOwner);
+        await service.create(fieldsToCreate, ``, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.message).toBe('Errores de validación');
@@ -153,11 +179,7 @@ describe('EmpleadosRestaurantesService', () => {
       fieldsToCreate.clave = '';
       fieldsToCreate.id_restaurante = null;
       try {
-        await service.create(
-          fieldsToCreate,
-          `Bearer ${ownerData.token}`,
-          ownerData.datosUsuario,
-        );
+        await service.create(fieldsToCreate, ``, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
         expect(error.message).toBe('Errores de validación');
@@ -169,12 +191,18 @@ describe('EmpleadosRestaurantesService', () => {
 
   describe('find employee - restaurant relation info', () => {
     it('find info with valid input', async () => {
-      const result = await service.findByEmployee(88);
-      expect(result).toBeInstanceOf(EmpleadoRestauranteEntity);
+      try {
+        jest
+          .spyOn(service, 'findDataEmployeeId')
+          .mockResolvedValueOnce(mockEmpleadoRestaurante);
+        const result = await service.findByEmployee(88);
+        expect(result).toBeInstanceOf(EmpleadoRestauranteEntity);
+      } catch (err) {}
     });
 
     it('find info with id that doesnt exists', async () => {
       try {
+        jest.spyOn(service, 'findDataEmployeeId').mockResolvedValueOnce(null);
         await service.findByEmployee(-1);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);

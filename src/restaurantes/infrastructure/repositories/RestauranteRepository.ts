@@ -16,21 +16,11 @@ export class RestauranteRepository extends Repository<RestauranteEntity> {
     return this.save(newRestaurant);
   }
 
-  async findOnlyIdRestaurant(
-    id_restaurante: number,
-  ): Promise<RestauranteEntity> {
-    return await this.findOne({
-      select: { id: true },
-      where: {
-        id: id_restaurante,
-      },
-    });
-  }
   async findRestaurantById(id_restaurante: number): Promise<RestauranteEntity> {
-    return await this.findOneBy({ id: id_restaurante });
+    return this.findOneBy({ id: id_restaurante });
   }
 
   async paginateRestaurants(options): Promise<RestauranteEntity[]> {
-    return await this.find(options);
+    return this.find(options);
   }
 }

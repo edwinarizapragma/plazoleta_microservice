@@ -8,10 +8,9 @@ import {
   Matches,
   Validate,
 } from 'class-validator';
-import {
-  checkUsuarioIsPropietario,
-  checkNombreRestaurante,
-} from './validations/createRestauranteCustomValidator';
+import { checkNombreRestaurante } from './validations/createRestauranteCustomValidator';
+import { Injectable } from '@nestjs/common';
+@Injectable()
 export class createRestauranteDto {
   @ApiProperty({
     example: 'Los pollos hermanos',
@@ -56,10 +55,6 @@ export class createRestauranteDto {
   })
   @IsNotEmpty({
     message: 'El id de propietario es requerido',
-  })
-  @Validate(checkUsuarioIsPropietario, {
-    message:
-      'El id proporcionado no existe o no corresponde a un usuario con rol propietario',
   })
   id_propietario: number;
 

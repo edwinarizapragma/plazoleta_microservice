@@ -11,10 +11,12 @@ import { RestauranteRepository } from '../restaurantes/infrastructure/repositori
 import { PlatoRepository } from '../platos/infrastructure/repositories/PlatoRepository';
 import { EmpleadosRestaurantesService } from '../empleados_restaurantes/applications/use_cases/empleados_restaurantes.service';
 import { EmpleadosRestaurantesRepository } from '../empleados_restaurantes/infrastructure/repositories/EmpleadoRestauranteRepository';
-import { UsuariosMicroserviceService } from '../empleados_restaurantes/infrastructure/axios/usuarios_micro.service';
+import { CreateEmpleadoService } from '../empleados_restaurantes/infrastructure/axios/createEmpleado.service';
 import { EmpleadoRestauranteEntity } from '../../database/typeorm/entities/EmpeladoRestaurante.entity';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { MensajeriaMicroServiceService } from './infrastructure/axios/mensajeria-micro.service';
+import { UserMicroService } from '../../util/finders/findUserById';
+import { RestaurantesService } from '../restaurantes/application/use_cases/restaurantes.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -27,14 +29,16 @@ import { MensajeriaMicroServiceService } from './infrastructure/axios/mensajeria
   controllers: [PedidosController],
   providers: [
     PedidosService,
+    RestaurantesService,
     PedidoRepository,
     RestauranteRepository,
     PedidosPlatosRepository,
     PlatoRepository,
     EmpleadosRestaurantesService,
     EmpleadosRestaurantesRepository,
-    UsuariosMicroserviceService,
+    CreateEmpleadoService,
     MensajeriaMicroServiceService,
+    UserMicroService,
   ],
 })
 export class PedidosModule {

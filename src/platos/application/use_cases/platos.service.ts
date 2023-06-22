@@ -8,12 +8,14 @@ import { CategoriaRepository } from '../../infrastructure/repositories/Categoria
 import { RestauranteRepository } from '../../../restaurantes/infrastructure/repositories/RestauranteRepository';
 import { listByRestaurantDto } from '../../interfaces/dto/listByRestaraunt.dto';
 import { getErrorMessages } from '../../../../util/errors/getValidationErrorMessages';
+import { RestaurantesService } from '../../../restaurantes/application/use_cases/restaurantes.service';
 @Injectable()
 export class PlatosService {
   constructor(
-    private platoRepository: PlatoRepository,
-    private categoriaRepository: CategoriaRepository,
-    private restauranteRepository: RestauranteRepository,
+    private readonly platoRepository: PlatoRepository,
+    private readonly categoriaRepository: CategoriaRepository,
+    private readonly restauranteRepository: RestauranteRepository,
+    private readonly restauranteService: RestaurantesService,
   ) {}
 
   async categoryNotExists(id_categoria: number): Promise<boolean> {
@@ -23,7 +25,11 @@ export class PlatosService {
     return [null, undefined].includes(searchCategory);
   }
 
-  async createPlato(fields: createPlatoDto, usuario): Promise<any> {
+  async getRestaurantById(id: number): Promise<any> {
+    return this.restauranteService.findRestaurant(id);
+  }
+
+  async createPlato(fields: createPlatoDto, usuario) {
     if (usuario.nombreRol !== 'Propietario') {
       throw new HttpException(
         {
@@ -45,10 +51,9 @@ export class PlatosService {
       if (await this.categoryNotExists(fields.id_categoria)) {
         errores.push('La categoría proporcionada no se encuentra registrada');
       }
-      const searchRestaurante =
-        await this.restauranteRepository.findRestaurantById(
-          fields.id_restaurante,
-        );
+      const searchRestaurante = await this.getRestaurantById(
+        fields.id_restaurante,
+      );
       if ([null, undefined].includes(searchRestaurante)) {
         errores.push('El restaurante proporcionado no se encuentra registrado');
       }
@@ -58,7 +63,6 @@ export class PlatosService {
           errors: errores,
         };
       }
-
       if (searchRestaurante.id_propietario !== usuario.id) {
         throw {
           message: 'Errores de validación',
@@ -68,9 +72,13 @@ export class PlatosService {
         };
       }
       fields.activo = true;
-      const { nombre, precio, descripcion } =
-        await this.platoRepository.createNewPlato(fields);
-      return { nombre, precio, descripcion };
+      // const { nombre, precio, descripcion } =
+      //   await this.platoRepository.createNewPlato(fields);
+      // return { nombre, precio, descripcion };
+      await this.platoRepository.createNewPlato(fields).catch((e) => {
+        throw e;
+      });
+      return { message: 'Plato creado exitosamente' };
     } catch (error) {
       throw new HttpException(
         {
@@ -85,7 +93,7 @@ export class PlatosService {
   }
 
   async findPLatoById(id: number): Promise<any> {
-    return await this.platoRepository.findPLatoById(id);
+    return await this.platoRepository.findById(id);
   }
 
   async updatePlato(id: number, fields: updatePlatoDto, usuario) {
@@ -106,7 +114,7 @@ export class PlatosService {
         };
       }
       const platoToUpdate = await this.findPLatoById(id);
-      if ([null, undefined].includes(platoToUpdate)) {
+      if (!platoToUpdate) {
         throw { message: 'El id del plato proporcionado no existe' };
       }
 
@@ -135,10 +143,10 @@ export class PlatosService {
       if (fields.descripcion) {
         platoToUpdate.descripcion = fields.descripcion;
       }
-      const { precio, descripcion } = await this.platoRepository.updatePlato(
-        platoToUpdate,
-      );
-      return { precio, descripcion };
+      await this.platoRepository.updatePlato(platoToUpdate).catch((e) => {
+        throw e;
+      });
+      return { message: 'Plato actualizado correctamente' };
     } catch (error) {
       throw new HttpException(
         {
@@ -230,8 +238,7 @@ export class PlatosService {
           errors: getErrorMessages(validationParams),
         };
       }
-      const searchRestaurant =
-        await this.restauranteRepository.findRestaurantById(id);
+      const searchRestaurant = await this.getRestaurantById(id);
       if ([null, undefined].includes(searchRestaurant)) {
         throw {
           message: 'Errores de validación',
@@ -258,11 +265,9 @@ export class PlatosService {
       if (params.id_categoria) {
         options.where['id_categoria'] = params.id_categoria;
       }
-      return await this.platoRepository
-        .listByRestaurantId(options)
-        .catch((err) => {
-          throw err;
-        });
+      return this.platoRepository.listByRestaurantId(options).catch((err) => {
+        throw err;
+      });
     } catch (error) {
       throw new HttpException(
         {

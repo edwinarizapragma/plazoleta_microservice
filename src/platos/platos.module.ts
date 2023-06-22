@@ -9,6 +9,8 @@ import { PlatoRepository } from './infrastructure/repositories/PlatoRepository';
 import { CategoriaRepository } from './infrastructure/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../restaurantes/infrastructure/repositories/RestauranteRepository';
 import { TokenVerification } from '../../middleware/auth.middleware';
+import { RestaurantesService } from '../restaurantes/application/use_cases/restaurantes.service';
+import { UserMicroService } from '../../util/finders/findUserById';
 @Module({
   imports: [
     TypeOrmModule.forFeature([RestauranteEntity, PlatoEntity, CategoriaEntity]),
@@ -16,6 +18,8 @@ import { TokenVerification } from '../../middleware/auth.middleware';
   controllers: [PlatosController],
   providers: [
     PlatosService,
+    RestaurantesService,
+    UserMicroService,
     PlatoRepository,
     RestauranteRepository,
     CategoriaRepository,

@@ -7,7 +7,9 @@ import { TokenVerification } from '../../middleware/auth.middleware';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { RestauranteRepository } from '../restaurantes/infrastructure/repositories/RestauranteRepository';
 import { EmpleadosRestaurantesRepository } from './infrastructure/repositories/EmpleadoRestauranteRepository';
-import { UsuariosMicroserviceService } from './infrastructure/axios/usuarios_micro.service';
+import { CreateEmpleadoService } from './infrastructure/axios/createEmpleado.service';
+import { RestaurantesService } from '../restaurantes/application/use_cases/restaurantes.service';
+import { UserMicroService } from '../../util/finders/findUserById';
 @Module({
   imports: [
     TypeOrmModule.forFeature([EmpleadoRestauranteEntity, RestauranteEntity]),
@@ -15,9 +17,11 @@ import { UsuariosMicroserviceService } from './infrastructure/axios/usuarios_mic
   controllers: [EmpleadosRestaurantesController],
   providers: [
     EmpleadosRestaurantesService,
+    RestaurantesService,
     EmpleadosRestaurantesRepository,
     RestauranteRepository,
-    UsuariosMicroserviceService,
+    CreateEmpleadoService,
+    UserMicroService,
   ],
 })
 export class EmpleadosRestaurantesModule {

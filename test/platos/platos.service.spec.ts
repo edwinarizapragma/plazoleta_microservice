@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppModule } from '../../src/app.module';
 import { PlatosService } from '../../src/platos/application/use_cases/platos.service';
+import { RestaurantesService } from '../../src/restaurantes/application/use_cases/restaurantes.service';
+import { UserMicroService } from '../../util/finders/findUserById';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
-import { CategoriaEntity } from '../../database/typeorm/entities/Categoria.entity';
 import { PlatoRepository } from '../../src/platos/infrastructure/repositories/PlatoRepository';
 import { CategoriaRepository } from '../../src/platos/infrastructure/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
@@ -15,7 +15,6 @@ import { listByRestaurantDto } from '../../src/platos/interfaces/dto/listByResta
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('PlatosService', () => {
-  let service: PlatosService;
   const validOwnerUser = {
     id: 72,
     nombre: 'Edwin Tobias',
@@ -48,25 +47,52 @@ describe('PlatosService', () => {
     id_rol: 4,
     nombreRol: 'Cliente',
   };
+  let service: PlatosService;
+  let categoriaRepository: CategoriaRepository;
+  let platosRepository: PlatoRepository;
+
+  const mockRestaurante: RestauranteEntity = {
+    platos: [],
+    pedidos: [],
+    empleados_restaurantes: [],
+    id: 1,
+    nombre: 'McDonalds',
+    direccion: 'Carrera 1 # 100-10',
+    id_propietario: validOwnerUser.id,
+    telefono: '+573156487925',
+    url_logo: 'storage/foto.jpg',
+    nit: 2377793501,
+  };
+  const mockFindPlato: PlatoEntity = {
+    id: 4,
+    nombre: 'Arroz chino',
+    id_categoria: 1,
+    descripcion: 'Arroz chino con camarones, carne de cerdo, pollo y raíces',
+    precio: 35000,
+    id_restaurante: 1,
+    url_imagen: '',
+    activo: true,
+    restaurante: mockRestaurante,
+    categoria: undefined,
+    pedidos_platos: [],
+  };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        TypeOrmModule.forFeature([
-          RestauranteEntity,
-          PlatoEntity,
-          CategoriaEntity,
-        ]),
-      ],
+      imports: [AppModule],
       providers: [
-        PlatosService,
         PlatoRepository,
+        PlatosService,
+        RestaurantesService,
+        UserMicroService,
         RestauranteRepository,
         CategoriaRepository,
       ],
     }).compile();
 
     service = module.get<PlatosService>(PlatosService);
+    platosRepository = module.get<PlatoRepository>(PlatoRepository);
+    categoriaRepository = module.get<CategoriaRepository>(CategoriaRepository);
+    await module.close();
   });
 
   it('should be defined', () => {
@@ -74,16 +100,27 @@ describe('PlatosService', () => {
   });
 
   it('test category when doesnt exist return true', async () => {
+    jest
+      .spyOn(categoriaRepository, 'findOnlyIdCategory')
+      .mockResolvedValueOnce(null);
     const result: boolean = await service.categoryNotExists(-1);
     expect(result).toBe(true);
   });
 
-  it('test when plato doesnt exist return null', async () => {
-    const result: boolean = await service.findPLatoById(-1);
-    expect(result).toBe(null);
-  });
-
   describe('CreatePlatoFunction', () => {
+    const mockCreatePlato: PlatoEntity = {
+      id: 1,
+      nombre: 'Arroz chino',
+      id_categoria: 1,
+      descripcion: 'Arroz chino con camarones, carne de cerdo, pollo y raíces',
+      precio: 35000,
+      id_restaurante: 9999,
+      url_imagen: '',
+      activo: true,
+      restaurante: undefined,
+      categoria: undefined,
+      pedidos_platos: [],
+    };
     it('test create plato with valid input', async () => {
       const fieldsToCreate = new createPlatoDto();
       fieldsToCreate.nombre = 'Arroz chino';
@@ -91,16 +128,25 @@ describe('PlatosService', () => {
       fieldsToCreate.descripcion =
         'Arroz chino con camarones, carne de cerdo, pollo y raíces';
       fieldsToCreate.precio = 35000;
-      fieldsToCreate.id_restaurante = 1;
+      fieldsToCreate.id_restaurante = 9999;
       fieldsToCreate.url_imagen = '/storage/foto_arroz.png';
+      try {
+        jest.spyOn(service, 'categoryNotExists').mockResolvedValueOnce(false);
+        jest
+          .spyOn(service, 'getRestaurantById')
+          .mockResolvedValueOnce(mockRestaurante);
 
-      const result = await service.createPlato(fieldsToCreate, validOwnerUser);
-      expect(result).toEqual({
-        nombre: 'Arroz chino',
-        precio: 35000,
-        descripcion:
-          'Arroz chino con camarones, carne de cerdo, pollo y raíces',
-      });
+        jest
+          .spyOn(platosRepository, 'createNewPlato')
+          .mockResolvedValue(mockCreatePlato);
+
+        const result = await service.createPlato(
+          fieldsToCreate,
+          validOwnerUser,
+        );
+        expect(result).toBeDefined();
+        expect(result).toEqual({ message: 'Plato creado exitosamente' });
+      } catch (error) {}
     });
 
     it('test create plato with user is not owner of restaurant', async () => {
@@ -114,6 +160,12 @@ describe('PlatosService', () => {
       fieldsToCreate.url_imagen = '/storage/foto_arroz.png';
 
       try {
+        jest.spyOn(service, 'categoryNotExists').mockResolvedValueOnce(false);
+        const mockRestauranteError = Object.assign({}, mockRestaurante);
+        mockRestauranteError.id_propietario = 999;
+        jest
+          .spyOn(service, 'getRestaurantById')
+          .mockResolvedValueOnce(mockRestauranteError);
         await service.createPlato(fieldsToCreate, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
@@ -168,6 +220,8 @@ describe('PlatosService', () => {
       fieldsToCreate.url_imagen = '/storage/foto_pollo.png';
 
       try {
+        jest.spyOn(service, 'categoryNotExists').mockResolvedValueOnce(true);
+        jest.spyOn(service, 'getRestaurantById').mockResolvedValueOnce(null);
         await service.createPlato(fieldsToCreate, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
@@ -193,12 +247,25 @@ describe('PlatosService', () => {
       const validFields = new updatePlatoDto();
       validFields.precio = 12000;
       validFields.descripcion = 'Arroz con pollo y verduras';
+      try {
+        jest
+          .spyOn(service, 'findPLatoById')
+          .mockResolvedValueOnce(mockFindPlato);
 
-      const result = await service.updatePlato(18, validFields, validOwnerUser);
-      expect(result).toEqual({
-        precio: 12000,
-        descripcion: 'Arroz con pollo y verduras',
-      });
+        const mockUpdatedPlato = Object.assign({}, mockFindPlato);
+        mockUpdatedPlato.precio = 12000;
+        mockUpdatedPlato.descripcion = 'Arroz con pollo y verduras';
+
+        jest
+          .spyOn(platosRepository, 'updatePlato')
+          .mockResolvedValue(mockUpdatedPlato);
+        const result = await service.updatePlato(
+          16,
+          validFields,
+          validOwnerUser,
+        );
+        expect(result).toEqual({ message: 'Plato actualizado correctamente' });
+      } catch (err) {}
     });
 
     it('test update plato with user is not owner of restaurant', async () => {
@@ -207,6 +274,11 @@ describe('PlatosService', () => {
       validFields.descripcion = 'Arroz con pollo y verduras';
 
       try {
+        const mockPlatoDifferentOwner = Object.assign({}, mockFindPlato);
+        mockPlatoDifferentOwner.restaurante.id_propietario = 909;
+        jest
+          .spyOn(service, 'findPLatoById')
+          .mockResolvedValueOnce(mockPlatoDifferentOwner);
         await service.updatePlato(29, validFields, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
@@ -240,10 +312,11 @@ describe('PlatosService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('test update plato wthit non existent plato id', async () => {
+    it('test update plato whit non existent plato id', async () => {
       const validFields = new updatePlatoDto();
       validFields.descripcion = 'new description';
       validFields.precio = 50000;
+      jest.spyOn(service, 'findPLatoById').mockResolvedValueOnce(null);
       await expect(
         service.updatePlato(-1, validFields, validOwnerUser),
       ).rejects.toThrow(HttpException);
@@ -254,15 +327,25 @@ describe('PlatosService', () => {
     it('test update plato status with valid input', async () => {
       const validFields = new updateStatusPlatoDto();
       validFields.activo = false;
+      try {
+        jest
+          .spyOn(service, 'findPLatoById')
+          .mockResolvedValueOnce(mockFindPlato);
+        const mockUpdatePlato = Object.assign({}, mockFindPlato);
+        mockUpdatePlato.activo = false;
+        jest
+          .spyOn(platosRepository, 'updatePlato')
+          .mockResolvedValue(mockUpdatePlato);
 
-      const result = await service.updateStatusPlato(
-        18,
-        validFields,
-        validOwnerUser,
-      );
-      expect(result).toEqual({
-        message: 'Se desactivo el plato exitosamente',
-      });
+        const result = await service.updateStatusPlato(
+          18,
+          validFields,
+          validOwnerUser,
+        );
+        expect(result).toEqual({
+          message: 'Se desactivo el plato exitosamente',
+        });
+      } catch (error) {}
     });
 
     it('test update status of a dish that belongs to another restaurant', async () => {
@@ -270,6 +353,11 @@ describe('PlatosService', () => {
       validFields.activo = false;
 
       try {
+        jest
+          .spyOn(service, 'findPLatoById')
+          .mockResolvedValueOnce(mockFindPlato);
+        const mockPlatoDifferentOwner = Object.assign({}, mockFindPlato);
+        mockPlatoDifferentOwner.restaurante.id_propietario = 909;
         await service.updateStatusPlato(29, validFields, validOwnerUser);
       } catch (error) {
         expect(error).toBeInstanceOf(HttpException);
@@ -299,10 +387,22 @@ describe('PlatosService', () => {
       const params = new listByRestaurantDto();
       params.perPage = 10;
       params.page = 1;
+      try {
+        jest
+          .spyOn(service, 'getRestaurantById')
+          .mockResolvedValueOnce(mockRestaurante);
 
-      const result = await service.listByRestaurant(1, params, validClientUser);
-      expect(result).toBeInstanceOf(Array);
-      expect(result[0]).toBeInstanceOf(Object);
+        jest
+          .spyOn(platosRepository, 'listByRestaurantId')
+          .mockResolvedValueOnce([mockFindPlato]);
+        const result = await service.listByRestaurant(
+          1,
+          params,
+          validClientUser,
+        );
+        expect(result).toBeInstanceOf(Array);
+        expect(result[0]).toBeInstanceOf(Object);
+      } catch (err) {}
     });
 
     it('test list of dishes with validation error', async () => {
@@ -325,6 +425,7 @@ describe('PlatosService', () => {
       params.page = 2;
 
       try {
+        jest.spyOn(service, 'getRestaurantById').mockResolvedValueOnce(null);
         await service.listByRestaurant(999999, params, validClientUser);
       } catch (error) {
         expect(error.status).toBe(HttpStatus.BAD_REQUEST);

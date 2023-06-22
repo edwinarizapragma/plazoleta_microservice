@@ -5,10 +5,11 @@ import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.e
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestauranteRepository } from './infrastructure/repositories/RestauranteRepository';
 import { TokenVerification } from '../../middleware/auth.middleware';
+import { UserMicroService } from '../../util/finders/findUserById';
 @Module({
   imports: [TypeOrmModule.forFeature([RestauranteEntity])],
   controllers: [RestaurantesController],
-  providers: [RestaurantesService, RestauranteRepository],
+  providers: [RestaurantesService, RestauranteRepository, UserMicroService],
 })
 export class RestaurantesModule {
   configure(consumer: MiddlewareConsumer) {
