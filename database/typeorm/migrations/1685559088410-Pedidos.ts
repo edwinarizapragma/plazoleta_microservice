@@ -40,7 +40,7 @@ export class Pedidos1685559088410 implements MigrationInterface {
           },
           {
             name: 'codigo_verificacion',
-            type: 'varchara',
+            type: 'varchar',
             isNullable: true,
           },
         ],
