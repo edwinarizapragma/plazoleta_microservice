@@ -37,15 +37,10 @@ export class EmpleadosRestaurantesController {
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
   async createRow(
     @Body() fieldsToCreate: CreateEmpleadoRestauranteDto,
-    @Headers('authorization') token: string,
     @Query('usuario')
     usuario,
   ) {
-    return this.empleadoRestauranteService.create(
-      fieldsToCreate,
-      token,
-      usuario,
-    );
+    return this.empleadoRestauranteService.create(fieldsToCreate, usuario);
   }
 
   @Get('/find-by-employee/:id')
