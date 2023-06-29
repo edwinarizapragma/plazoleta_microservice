@@ -2,7 +2,7 @@ name: CI with SonarCloud, ECR, and Elastic Beanstalk
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
    
