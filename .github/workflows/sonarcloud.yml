@@ -1,0 +1,89 @@
+name: CI with SonarCloud, ECR, and Elastic Beanstalk
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+   
+env:
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  AWS_REGION: 'us-east-1'
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_ECR_REPO_NAME: 'api-plazoleta-docker'
+  AWS_ECR_REPO_LINK: 'public.ecr.aws/y0v1w6p0/api-plazoleta-docker'
+  AWS_ECR_REPO_PATH: 'public.ecr.aws/y0v1w6p0'
+  AWS_EB_ENVIRONMENT: 'Api-plazoleta-micro-env'
+  AWS_EB_APPLICATION: 'api-plazoleta-micro'
+    
+jobs:
+  build-and-test:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Test and coverage
+        run: npm run test:cov
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
+      - name: Build
+        run: npm run build
+  deploy-ecr:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build and push Docker image to ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker image to ECR
+        run: |
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{env.AWS_ECR_REPO_PATH}}
+          docker build -t ${{env.AWS_ECR_REPO_NAME}} .
+          docker tag ${{env.AWS_ECR_REPO_NAME}}:latest ${{env.AWS_ECR_REPO_LINK}}:latest
+          docker push ${{env.AWS_ECR_REPO_LINK}}:latest
+  
+  
+  deploy-eb:
+    needs: deploy-ecr
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+      # only use for set the latest versions
+      - name: Generate deployment package
+        run: zip -r deploy.zip ./Dockerrun.aws.json
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ env.AWS_EB_APPLICATION }}
+          environment_name: ${{ env.AWS_EB_ENVIRONMENT }}
+          version_label: 'latest'
+          region: ${{ env.AWS_REGION }}       
+          deployment_package: deploy.zip         # only use for set the latest versions
+#          use_existing_version_if_available: true
