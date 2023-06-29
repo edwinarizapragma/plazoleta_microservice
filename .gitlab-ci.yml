@@ -9,7 +9,7 @@
 
 # Official framework image. Look for the different tagged releases at:
 # https://hub.docker.com/r/library/node/tags/
-image: node:latest
+image: node:18.0.0
 
 # Pick zero or more services to be used on all builds.
 # Only needed when using a docker container to run your tests in.
@@ -26,9 +26,11 @@ cache:
 test_async:
   script:
     - npm install
-    - npm run test
+    - npm run test:cov
 
 deploy:
   stage: deploy
-  script: npm run start
+  script:
+    - npm install
+    - npm run start
   environment: production
