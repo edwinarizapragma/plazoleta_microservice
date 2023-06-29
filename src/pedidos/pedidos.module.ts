@@ -4,7 +4,7 @@ import { PedidosService } from './application/use_cases/pedidos.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PedidoEntity } from '../../database/typeorm/entities/Pedido.entity';
 import { PedidoPLatoEntity } from '../../database/typeorm/entities/PedidoPlato.entity';
-import { TokenVerification } from '../../middleware/auth.middleware';
+import { TokenVerification } from '../middleware/auth.middleware';
 import { PedidoRepository } from './infrastructure/repositories/PedidoRepository';
 import { PedidosPlatosRepository } from './infrastructure/repositories/PedidosPlatosRepository';
 import { RestauranteRepository } from '../restaurantes/infrastructure/repositories/RestauranteRepository';

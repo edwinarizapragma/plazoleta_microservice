@@ -3,7 +3,7 @@ import { EmpleadosRestaurantesController } from './interfaces/controllers/emplea
 import { EmpleadosRestaurantesService } from './applications/use_cases/empleados_restaurantes.service';
 import { EmpleadoRestauranteEntity } from '../../database/typeorm/entities/EmpeladoRestaurante.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TokenVerification } from '../../middleware/auth.middleware';
+import { TokenVerification } from '../middleware/auth.middleware';
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { RestauranteRepository } from '../restaurantes/infrastructure/repositories/RestauranteRepository';
 import { EmpleadosRestaurantesRepository } from './infrastructure/repositories/EmpleadoRestauranteRepository';

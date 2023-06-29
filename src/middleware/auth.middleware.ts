@@ -8,7 +8,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as dotenv from 'dotenv';
 dotenv.config();
 import axios from 'axios';
-import { axiosErrorHandler } from '../util/errors/axiosErrorsHandler';
+import { axiosErrorHandler } from '../../util/errors/axiosErrorsHandler';
 @Injectable()
 export class TokenVerification implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {

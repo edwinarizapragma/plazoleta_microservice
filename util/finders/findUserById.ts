@@ -19,7 +19,6 @@ export class UserMicroService {
         return axiosErrorHandler(error);
       });
     if (!infoAuth.hasOwnProperty('token')) {
-      console.log('Error, no se obtuvo el token');
       return false;
     }
     const url = `${process.env.URL_USUARIOS_MICROSERVICE}/usuarios/find/${idUsuario}`;

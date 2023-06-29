@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from '../../src/app.module';
-import { PlatosService } from '../../src/platos/application/use_cases/platos.service';
-import { RestaurantesService } from '../../src/restaurantes/application/use_cases/restaurantes.service';
-import { UserMicroService } from '../../util/finders/findUserById';
-import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
-import { PlatoEntity } from '../../database/typeorm/entities/Plato.entity';
-import { PlatoRepository } from '../../src/platos/infrastructure/repositories/PlatoRepository';
-import { CategoriaRepository } from '../../src/platos/infrastructure/repositories/CategoriaRepository';
-import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
-import { createPlatoDto } from '../../src/platos/interfaces/dto/createPlato.dto';
-import { updatePlatoDto } from '../../src/platos/interfaces/dto/updatePlato.dto';
-import { updateStatusPlatoDto } from '../../src/platos/interfaces/dto/updateStatusPlato.dto';
-import { listByRestaurantDto } from '../../src/platos/interfaces/dto/listByRestaraunt.dto';
+import { AppModule } from '../src/app.module';
+import { PlatosService } from '../src/platos/application/use_cases/platos.service';
+import { RestaurantesService } from '../src/restaurantes/application/use_cases/restaurantes.service';
+import { UserMicroService } from '../util/finders/findUserById';
+import { RestauranteEntity } from '../database/typeorm/entities/Restaurante.entity';
+import { PlatoEntity } from '../database/typeorm/entities/Plato.entity';
+import { PlatoRepository } from '../src/platos/infrastructure/repositories/PlatoRepository';
+import { CategoriaRepository } from '../src/platos/infrastructure/repositories/CategoriaRepository';
+import { RestauranteRepository } from '../src/restaurantes/infrastructure/repositories/RestauranteRepository';
+import { createPlatoDto } from '../src/platos/interfaces/dto/createPlato.dto';
+import { updatePlatoDto } from '../src/platos/interfaces/dto/updatePlato.dto';
+import { updateStatusPlatoDto } from '../src/platos/interfaces/dto/updateStatusPlato.dto';
+import { listByRestaurantDto } from '../src/platos/interfaces/dto/listByRestaraunt.dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
 
 describe('PlatosService', () => {

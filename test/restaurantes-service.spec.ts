@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppModule } from '../../src/app.module';
-import { RestaurantesService } from '../../src/restaurantes/application/use_cases/restaurantes.service';
-import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
-import { RestauranteRepository } from '../../src/restaurantes/infrastructure/repositories/RestauranteRepository';
-import { createRestauranteDto } from '../../src/restaurantes/interfaces/dto/createRestaurant.dto';
-import { listRestaurantDto } from '../../src/restaurantes/interfaces/dto/listRestaurant.dto';
+import { AppModule } from '../src/app.module';
+import { RestaurantesService } from '../src/restaurantes/application/use_cases/restaurantes.service';
+import { RestauranteEntity } from '../database/typeorm/entities/Restaurante.entity';
+import { RestauranteRepository } from '../src/restaurantes/infrastructure/repositories/RestauranteRepository';
+import { createRestauranteDto } from '../src/restaurantes/interfaces/dto/createRestaurant.dto';
+import { listRestaurantDto } from '../src/restaurantes/interfaces/dto/listRestaurant.dto';
 import { HttpStatus } from '@nestjs/common';
-import { UserMicroService } from '../../util/finders/findUserById';
+import { UserMicroService } from '../util/finders/findUserById';
 
 describe('RestaurantesService', () => {
   const validClientUser = {
