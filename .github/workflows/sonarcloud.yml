@@ -15,7 +15,7 @@ env:
   AWS_ECR_REPO_LINK: 'public.ecr.aws/y0v1w6p0/api-plazoleta-docker'
   AWS_ECR_REPO_PATH: 'public.ecr.aws/y0v1w6p0'
   AWS_EB_ENVIRONMENT: 'Api-plazoleta-micro-env'
-  AWS_EB_APPLICATION: 'api-plazoleta-micro'
+  AWS_EB_APPLICATION: 'env-api-plazoleta-micro'
     
 jobs:
   build-and-test:
