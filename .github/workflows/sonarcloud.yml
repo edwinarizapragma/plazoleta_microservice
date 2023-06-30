@@ -104,6 +104,7 @@ jobs:
           version_label: 'latest'
           region: ${{ env.AWS_REGION }}       
           deployment_package: deploy.zip         # only use for set the latest versions
+          use_existing_version_if_available: true
       - name: SendMessage - Deploy EB
         if: failure()
         uses: teknatha136/actions-google-chat-text-message@main
