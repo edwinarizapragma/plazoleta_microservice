@@ -64,6 +64,12 @@ jobs:
           docker build -t ${{env.AWS_ECR_REPO_NAME}} .
           docker tag ${{env.AWS_ECR_REPO_NAME}}:latest ${{env.AWS_ECR_REPO_LINK}}:latest
           docker push ${{env.AWS_ECR_REPO_LINK}}:latest
+      - name: SendMessage
+        if: always() && steps.deploy.outcome == 'failure'
+        uses: teknatha136/actions-google-chat-text-message@main
+        with:
+          google-chat-webhook: https://chat.googleapis.com/v1/spaces/AAAAFYaQ2NE/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=SdVf-26c55YAZ26NXlgE5kSVnCXLM7IdlMV1J2Vb9vk
+          text-message: Ocurrió un error al desplegar. Ambiente- ${{ env.AWS_EB_ENVIRONMENT }}
   
   
   deploy-eb:
@@ -87,3 +93,4 @@ jobs:
           region: ${{ env.AWS_REGION }}       
           deployment_package: deploy.zip         # only use for set the latest versions
 #          use_existing_version_if_available: true
+
