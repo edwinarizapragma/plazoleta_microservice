@@ -83,12 +83,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: SendMessage
-        if: always() && steps.deploy-eb.outcome == 'failure'
-        uses: teknatha136/actions-google-chat-text-message@main
-        with:
-            google-chat-webhook: https://chat.googleapis.com/v1/spaces/AAAAFYaQ2NE/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=SdVf-26c55YAZ26NXlgE5kSVnCXLM7IdlMV1J2Vb9vk
-            text-message: Ocurrió un error al desplegar. Ambiente- ${{ env.AWS_EB_ENVIRONMENT }}
       - name: Checkout source code
         uses: actions/checkout@v3
       # only use for set the latest versions
