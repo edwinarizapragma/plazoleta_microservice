@@ -41,7 +41,7 @@ export class EmpleadosRestaurantesController {
     @Query('usuario')
     usuario,
   ) {
-    return this.empleadoRestauranteService.create(fieldsToCreate, usuario);
+    return this.empleadoRestauranteService.create(fieldsToCreate, '', usuario);
   }
 
   @Get('/find-by-employee/:id')

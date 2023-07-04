@@ -16,8 +16,8 @@ export class EmpleadosRestaurantesService {
   async getRestaurantById(id: number): Promise<any> {
     return this.restauranteService.findRestaurant(id);
   }
-  // async create(fieldsToCreate: CreateEmpleadoRestauranteDto, token usuario) {
-  async create(fieldsToCreate: CreateEmpleadoRestauranteDto, usuario) {
+  // async create(fieldsToCreate: CreateEmpleadoRestauranteDto, usuario) {
+  async create(fieldsToCreate: CreateEmpleadoRestauranteDto, token, usuario) {
     if (usuario.nombreRol !== 'Propietario') {
       throw new HttpException(
         {

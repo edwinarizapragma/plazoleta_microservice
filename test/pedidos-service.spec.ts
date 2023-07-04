@@ -34,6 +34,10 @@ describe('PedidosService', () => {
     correo: 'sarahsmith@example.com',
     id_rol: 4,
     nombreRol: 'Cliente',
+    rol: {
+      id: 1,
+      nombre: 'Cliente',
+    },
   };
   const usuarioEmpleado = {
     id: 77,

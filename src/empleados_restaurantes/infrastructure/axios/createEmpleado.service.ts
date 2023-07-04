@@ -13,10 +13,10 @@ export class CreateEmpleadoService {
       celular: '+573155680091',
       correo: 'sarahsmith@example.com',
       id_rol: 4,
-      rol: {
-        id: 1,
-        nombre: 'Empleado',
-      },
+      // rol: {
+      //   id: 1,
+      //   nombre: 'Empleado',
+      // },
     };
     /*const url = `${process.env.URL_USUARIOS_MICROSERVICE}/usuarios/create`;
     return await axios
