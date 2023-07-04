@@ -16,6 +16,7 @@ export class EmpleadosRestaurantesService {
   async getRestaurantById(id: number): Promise<any> {
     return this.restauranteService.findRestaurant(id);
   }
+  // async create(fieldsToCreate: CreateEmpleadoRestauranteDto, token usuario) {
   async create(fieldsToCreate: CreateEmpleadoRestauranteDto, usuario) {
     if (usuario.nombreRol !== 'Propietario') {
       throw new HttpException(
@@ -65,6 +66,10 @@ export class EmpleadosRestaurantesService {
       const employeeCreated = await this.createEmpleadoService.createEmployee(
         userEmployee,
       );
+      // const employeeCreated = await this.createEmpleadoService.createEmployee(
+      //   userEmployee,
+      //   token
+      // );
       await this.empleadoRestauranteRepository
         .createRow({
           id_empleado: employeeCreated.id,

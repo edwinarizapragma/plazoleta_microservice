@@ -8,7 +8,7 @@ import { CategoriaEntity } from '../../database/typeorm/entities/Categoria.entit
 import { PlatoRepository } from './infrastructure/repositories/PlatoRepository';
 import { CategoriaRepository } from './infrastructure/repositories/CategoriaRepository';
 import { RestauranteRepository } from '../restaurantes/infrastructure/repositories/RestauranteRepository';
-import { TokenVerification } from '../middleware/auth.middleware';
+import { TokenVerification } from '../../middleware/auth.middleware';
 import { RestaurantesService } from '../restaurantes/application/use_cases/restaurantes.service';
 import { UserMicroService } from '../../util/finders/findUserById';
 @Module({

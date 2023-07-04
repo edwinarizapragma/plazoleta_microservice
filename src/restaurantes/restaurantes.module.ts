@@ -4,7 +4,7 @@ import { RestaurantesService } from './application/use_cases/restaurantes.servic
 import { RestauranteEntity } from '../../database/typeorm/entities/Restaurante.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RestauranteRepository } from './infrastructure/repositories/RestauranteRepository';
-import { TokenVerification } from '../middleware/auth.middleware';
+import { TokenVerification } from '../../middleware/auth.middleware';
 import { UserMicroService } from '../../util/finders/findUserById';
 @Module({
   imports: [TypeOrmModule.forFeature([RestauranteEntity])],

@@ -35,6 +35,7 @@ export class EmpleadosRestaurantesController {
     description: 'No posee permisos para realizar esta acción',
   })
   @ApiResponse({ status: 500, description: 'Error interno del servidor' })
+  // @Headers('authorization') token: string,
   async createRow(
     @Body() fieldsToCreate: CreateEmpleadoRestauranteDto,
     @Query('usuario')
