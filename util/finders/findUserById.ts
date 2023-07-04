@@ -39,5 +39,18 @@ export class UserMicroService {
           e.statusCode ? e.statusCode : HttpStatus.INTERNAL_SERVER_ERROR,
         );
       });
+    return {
+      id: 89,
+      nombre: 'Sarah',
+      apellido: 'Smith',
+      numero_documento: 31578902,
+      celular: '+573155680091',
+      correo: 'sarahsmith@example.com',
+      id_rol: 4,
+      rol: {
+        id: 1,
+        nombre: 'Cliente',
+      },
+    };
   }
 }
