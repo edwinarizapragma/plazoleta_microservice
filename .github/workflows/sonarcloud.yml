@@ -36,7 +36,7 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}  # Needed to get PR information, if any
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} 
       - name: Build
         run: npm run build
@@ -99,7 +99,7 @@ jobs:
           region: ${{ env.AWS_REGION }}       
 #          deployment_package: deploy.zip         # only use for set the latest versions
           use_existing_version_if_available: true
-      - name: SendMessage - Deploy EB
+      - name: SendMessage - Deploy EB  #mensaje a google chat
         if: failure()
         uses: teknatha136/actions-google-chat-text-message@main
         with:
